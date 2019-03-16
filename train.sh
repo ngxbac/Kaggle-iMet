@@ -7,7 +7,7 @@ export PYTHONPATH
 
 echo "Training..."
 
-for model in densenet121 inception_v3 resnet50 resnet34 resnet18 se_resnet50; do
+for model in inception_v4 xception se_resnext50_32x4d; do
     for fold in 0 1 2 3 4; do
         LOGDIR=/media/ngxbac/DATA/logs_datahack/intel-scene/${model}_$fold
         catalyst-dl run --config=./intel-scene/config.yml \

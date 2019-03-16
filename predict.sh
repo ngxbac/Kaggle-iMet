@@ -9,10 +9,11 @@ LOGDIR=/media/ngxbac/DATA/logs_datahack/intel-scene/
 echo "Inference best checkpoint..."
 echo "Inference..."
 
-
+fold=0
+model=resnet34
 catalyst-dl run \
-   --expdir=intel-scene \
-   --resume=${LOGDIR}/checkpoints/best.pth \
-   --out-prefix=${LOGDIR}/dataset.predictions.{suffix}.npy \
-   --config=${LOGDIR}/config.json,./intel-scene/inference.yml \
-   --verbose
+    --config=./intel-scene/inference.yml \
+    --logdir=$LOGDIR \
+    --model_params/params/arch=$model:str \
+    --expdir=intel-scene \
+    --verbose

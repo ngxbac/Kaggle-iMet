@@ -1,13 +1,29 @@
-data_params:
-  infer_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/test.csv"
-  root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+model_params:
+  model: finetune
+  params:
+    arch: resnet34
+    n_class: 6
+    image_size: 224
+    pretrained: True
+
 
 args:
+  expdir: ""
+  logdir: &logdir "./logs/intel_scene"
   batch_size: 32
 
-stages: null
-callbacks_params:
-  loader:
-    callback: CheckpointCallback
+stages:
   infer:
-    callback: InferCallback
+    data_params:
+      n_workers: 4
+      batch_size: 64
+      infer_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/test.csv"
+      root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+
+    callbacks_params:
+      loader:
+        callback: CheckpointCallback
+      infer:
+        callback: InferCallback
+        out_dir: *logdir
+        out_prefix: "/predictions/{suffix}.npy"
