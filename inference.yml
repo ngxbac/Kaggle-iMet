@@ -1,0 +1,13 @@
+data_params:
+  infer_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/test.csv"
+  root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+
+args:
+  batch_size: 32
+
+stages: null
+callbacks_params:
+  loader:
+    callback: CheckpointCallback
+  infer:
+    callback: InferCallback

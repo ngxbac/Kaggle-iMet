@@ -1,0 +1,72 @@
+model_params:
+  model: finetune
+  params:
+    arch: resnet34
+    n_class: 6
+    image_size: 224
+    pretrained: True
+
+
+args:
+  expdir: ""
+  logdir: "./logs/intel_scene"
+
+
+stages:
+
+  data_params:
+    batch_size: 32
+    n_workers: 4
+
+    train_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/kfold/train_0.csv"
+    valid_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/kfold/valid_0.csv"
+    root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+
+  state_params:
+    main_metric: &reduce_metric precision01
+    minimize_metric: False
+
+  criterion_params:
+    criterion: CrossEntropyLoss
+
+  scheduler_params:
+    scheduler: ReduceLROnPlateau
+    patience: 5
+    factor: 0.1
+    mode: max
+    verbose: True
+
+  callbacks_params:
+    loss:
+      callback: LossCallback
+    optimizer:
+      callback: OptimizerCallback
+    precision:
+      callback: PrecisionCallback
+      precision_args: [1]
+    scheduler:
+      callback: SchedulerCallback
+      reduce_metric: *reduce_metric
+    saver:
+      callback: CheckpointCallback
+
+  stage1:
+
+    state_params:
+      n_epochs: 2
+
+    optimizer_params:
+      optimizer: Adam
+      lr: 0.001
+      weight_decay: 0.0001
+
+  # tune
+  stage2:
+
+    state_params:
+      n_epochs: 20
+
+    optimizer_params:
+      optimizer: Adam
+      lr: 0.0001
+      weight_decay: 0.0001
