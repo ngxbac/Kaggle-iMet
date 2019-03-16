@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.stats.mstats import gmean
 
 
 def softmax(X, theta=1.0, axis=None):
@@ -48,16 +49,19 @@ def softmax(X, theta=1.0, axis=None):
 
 if __name__ == '__main__':
     preds = []
-    for fold in range(5):
-        for tta in range(2):
-            pred = np.load(f"/media/ngxbac/DATA/logs_datahack/intel-scene/fold_{fold}/predict_seresnet50_2tta/dataset.predictions.infer_{tta}.logitsinfer.npy")
-            pred = softmax(pred, axis=1)
-            preds.append(pred)
+    for model_name in ["densenet121", "inception_v3", "resnet50"]:
+        for fold in range(5):
+            for checkpoint in range(5):
+                pred = np.load(f"/media/ngxbac/DATA/logs_datahack/intel-scene/{model_name}_{fold}/predict_swa_2/predictions.infer_0.logits.{checkpoint}.npy")
+                pred = softmax(pred, axis=1)
+                preds.append(pred)
 
-    preds = np.asarray(preds).mean(axis=0)
+    print(len(preds))
+    preds = np.asarray(preds)
+    preds = np.mean(preds, axis=1)
     print(preds.shape)
     preds = np.argmax(preds, axis=1)
 
     submission = pd.read_csv("./data/test.csv")
     submission['label'] = preds
-    submission.to_csv("kfold_seresnet50_2tta.csv", index=False)
+    submission.to_csv(f"kfold_5swa_blend.csv", index=False)
