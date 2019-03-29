@@ -51,11 +51,11 @@ def infer_tta_aug(image_size=224):
             Resize(image_size, image_size),
             Normalize(p=1),
         ], p=1),
-        # Compose([
-        #     Resize(image_size, image_size),
-        #     HorizontalFlip(p=1.0),
-        #     Normalize(p=1),
-        # ], p=1),
+        Compose([
+            Resize(image_size, image_size),
+            HorizontalFlip(p=1.0),
+            Normalize(p=1),
+        ], p=1),
     ]
     # for i in range(5):
     #     tta_simple.append(

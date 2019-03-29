@@ -3,7 +3,7 @@ model_params:
   params:
     arch: resnet34
     n_class: 6
-    image_size: 224
+    image_size: &image_size 224
     pretrained: True
 
 
@@ -17,8 +17,16 @@ stages:
     data_params:
       n_workers: 4
       batch_size: 64
-      infer_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/test.csv"
-      root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+      infer_csv: "/media/ngxbac/Bac2/fgvc6/data/test.csv"
+      root: "/media/ngxbac/Bac2/fgvc6/data/test_224/"
+
+      image_size: *image_size
+
+      # CsvDataset settings
+      image_key: 'file_name'
+      label_key: 'category_id'
+
+      use_tta: True
 
     callbacks_params:
       loader:

@@ -49,19 +49,23 @@ def softmax(X, theta=1.0, axis=None):
 
 if __name__ == '__main__':
     preds = []
-    for model_name in ["densenet121", "inception_v3", "resnet50"]:
-        for fold in range(5):
+    for model_name in ["resnet34"]:
+        for fold in [0]:
             for checkpoint in range(5):
-                pred = np.load(f"/media/ngxbac/DATA/logs_datahack/intel-scene/{model_name}_{fold}/predict_swa_2/predictions.infer_0.logits.{checkpoint}.npy")
+                pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predict_swa/predictions.infer_0.logits.{checkpoint}.npy")
                 pred = softmax(pred, axis=1)
                 preds.append(pred)
 
     print(len(preds))
     preds = np.asarray(preds)
-    preds = np.mean(preds, axis=1)
+    preds = np.mean(preds, axis=0)
     print(preds.shape)
     preds = np.argmax(preds, axis=1)
 
-    submission = pd.read_csv("./data/test.csv")
-    submission['label'] = preds
-    submission.to_csv(f"kfold_5swa_blend.csv", index=False)
+    test_df = pd.read_csv("/media/ngxbac/Bac2/fgvc6/data/test.csv")
+    submission = pd.DataFrame()
+    submission['Id'] = test_df['file_name']
+    submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
+    submission['Predicted'] = preds
+    submission.to_csv(f"./submission/first_commit.csv", index=False)
+    submission.to_csv(f"./submission/first_commit.csv.gz", index=False, compression='gzip')
