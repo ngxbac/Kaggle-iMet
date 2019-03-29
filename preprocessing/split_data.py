@@ -1,15 +1,17 @@
 import os
 import pandas as pd
 import argparse
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, GroupKFold
 
 
 def main(args):
     train_df = pd.read_csv(args.train_csv)
-    y = train_df['category_id'].values
 
-    kf = StratifiedKFold(n_splits=args.n_splits, shuffle=True, random_state=2411)
-    for fold, (train_idx, valid_idx) in enumerate(kf.split(train_df, y)):
+    locations = train_df['location'].values
+    y = train_df['category_id'].values
+    kf = GroupKFold(n_splits=args.n_splits)
+    for fold, (train_idx, valid_idx) in enumerate(kf.split(locations, y, locations)):
+
         train_fold = train_df.iloc[train_idx]
         valid_fold = train_df.iloc[valid_idx]
 

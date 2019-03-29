@@ -40,6 +40,7 @@ class Experiment(ConfigExperiment):
         valid_csv = kwargs.get("valid_csv", None)
         infer_csv = kwargs.get("infer_csv", None)
         image_size = kwargs.get("image_size", 224)
+        test_tta = kwargs.get("use_tta", False)
         root = kwargs.get("root", None)
 
         if train_csv:
@@ -65,14 +66,27 @@ class Experiment(ConfigExperiment):
             datasets["valid"] = validset
 
         if infer_csv:
-            inferset = CsvDataset(
-                csv_file=infer_csv,
-                root=root,
-                transform=valid_aug(image_size),
-                image_key=image_key,
-                label_key=label_key,
-                mode='infer'
-            )
-            datasets["infer"] = inferset
+            transforms = infer_tta_aug(image_size)
+            if not test_tta:
+                inferset = CsvDataset(
+                    csv_file=infer_csv,
+                    root=root,
+                    transform=transforms[0],
+                    image_key=image_key,
+                    label_key=label_key,
+                    mode='infer'
+                )
+                datasets["infer"] = inferset
+            else:
+                for i, transform in enumerate(transforms):
+                    inferset = CsvDataset(
+                        csv_file=infer_csv,
+                        root=root,
+                        transform=transform,
+                        image_key=image_key,
+                        label_key=label_key,
+                        mode='infer'
+                    )
+                    datasets[f"infer_{i}"] = inferset
 
         return datasets

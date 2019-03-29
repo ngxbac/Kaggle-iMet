@@ -15,7 +15,7 @@ import glob
 
 if __name__ == "__main__":
     for model_name in ["resnet34"]:
-        for fold in [0]: #[0, 1, 2, 3, 4]
+        for fold in [0, 1, 2, 3, 4, 5, 6]: #[0, 1, 2, 3, 4]
             log_dir = f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/"
             with open(f"{log_dir}/config.json") as f:
                 config = json.load(f)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
                     loaders[f'infer'] = infer_loader
 
-            all_checkpoints = glob.glob(f"{log_dir}/checkpoints/stage2.*.pth")
+            all_checkpoints = glob.glob(f"{log_dir}/checkpoints/best.pth")
 
             for i, checkpoint in enumerate(all_checkpoints):
                 callbacks = [

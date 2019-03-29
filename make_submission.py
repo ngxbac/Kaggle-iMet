@@ -50,11 +50,11 @@ def softmax(X, theta=1.0, axis=None):
 if __name__ == '__main__':
     preds = []
     for model_name in ["resnet34"]:
-        for fold in [0]:
-            for checkpoint in range(5):
-                pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predict_swa/predictions.infer_0.logits.{checkpoint}.npy")
-                pred = softmax(pred, axis=1)
-                preds.append(pred)
+        for fold in [0, 1, 2, 3, 4, 5, 6]:
+            # for checkpoint in range(5):
+            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predict_swa/predictions.infer_0.logits.0.npy")
+            pred = softmax(pred, axis=1)
+            preds.append(pred)
 
     print(len(preds))
     preds = np.asarray(preds)
@@ -67,5 +67,5 @@ if __name__ == '__main__':
     submission['Id'] = test_df['file_name']
     submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
     submission['Predicted'] = preds
-    submission.to_csv(f"./submission/first_commit.csv", index=False)
-    submission.to_csv(f"./submission/first_commit.csv.gz", index=False, compression='gzip')
+    submission.to_csv(f"./submission/kfold_by_location.csv", index=False)
+    submission.to_csv(f"./submission/kfold_by_location.csv.gz", index=False, compression='gzip')

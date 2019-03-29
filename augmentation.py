@@ -4,26 +4,26 @@ from albumentations import *
 def train_aug(image_size=224):
     return Compose([
         Resize(image_size, image_size),
-        OneOf([
-            IAAAdditiveGaussianNoise(),
-            GaussNoise(),
-        ], p=0.2),
-        OneOf([
-            MotionBlur(p=0.2),
-            MedianBlur(blur_limit=3, p=0.1),
-            Blur(blur_limit=3, p=0.1),
-        ], p=0.2),
-        OneOf([
-            OpticalDistortion(p=0.3),
-            GridDistortion(p=0.1),
-            IAAPiecewiseAffine(p=0.3),
-        ], p=0.2),
-        OneOf([
-            CLAHE(clip_limit=2),
-            IAASharpen(),
-            IAAEmboss(),
-            RandomBrightnessContrast(),
-        ], p=0.3),
+        # OneOf([
+        #     IAAAdditiveGaussianNoise(),
+        #     GaussNoise(),
+        # ], p=0.2),
+        # OneOf([
+        #     MotionBlur(p=0.2),
+        #     MedianBlur(blur_limit=3, p=0.1),
+        #     Blur(blur_limit=3, p=0.1),
+        # ], p=0.2),
+        # OneOf([
+        #     OpticalDistortion(p=0.3),
+        #     GridDistortion(p=0.1),
+        #     IAAPiecewiseAffine(p=0.3),
+        # ], p=0.2),
+        # OneOf([
+        #     CLAHE(clip_limit=2),
+        #     IAASharpen(),
+        #     IAAEmboss(),
+        #     RandomBrightnessContrast(),
+        # ], p=0.3),
         Rotate(limit=5),
         HorizontalFlip(),
         Normalize(),

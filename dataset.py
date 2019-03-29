@@ -21,7 +21,7 @@ class CsvDataset(Dataset):
                  image_key='file_name',
                  label_key='category_id',
                  ):
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(csv_file, nrows=None)
         self.images = df[image_key].values
         self.mode = mode
         if mode == 'train':
