@@ -2,14 +2,14 @@ model_params:
   model: finetune
   params:
     arch: resnet34
-    n_class: 6
-    image_size: 224
+    n_class: 23
+    image_size: &image_size 224
     pretrained: True
 
 
 args:
   expdir: ""
-  logdir: "./logs/intel_scene"
+  logdir: "./logs/iwild_cam/"
 
 
 stages:
@@ -18,12 +18,17 @@ stages:
     batch_size: 32
     n_workers: 4
 
-    train_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/kfold/train_0.csv"
-    valid_csv: "/media/ngxbac/Bac2/datahack/intel-scene/data/kfold/valid_0.csv"
-    root: "/media/ngxbac/Bac2/datahack/intel-scene/data/train-scene-classification/train/"
+    train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
+    valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
+    root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
+    image_size: *image_size
+
+    # CsvDataset settings
+    image_key: 'file_name'
+    label_key: 'category_id'
 
   state_params:
-    main_metric: &reduce_metric precision01
+    main_metric: &reduce_metric f1
     minimize_metric: False
 
   criterion_params:
@@ -41,9 +46,8 @@ stages:
       callback: LossCallback
     optimizer:
       callback: OptimizerCallback
-    precision:
-      callback: PrecisionCallback
-      precision_args: [1]
+    f1:
+      callback: F1Callback
     scheduler:
       callback: SchedulerCallback
       reduce_metric: *reduce_metric

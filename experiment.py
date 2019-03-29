@@ -2,7 +2,7 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 from catalyst.dl.experiments import ConfigExperiment
-from dataset import IntelSceneDataset
+from dataset import CsvDataset
 from augmentation import train_aug, valid_aug, infer_tta_aug
 
 
@@ -12,10 +12,10 @@ class Experiment(ConfigExperiment):
         if isinstance(model, torch.nn.DataParallel):
             model_ = model_.module
 
-        if stage == "stage1":
+        if "stage1" in stage:
             print("Stage1")
             model_.freeze_base()
-        elif stage == 'stage2':
+        elif "stage2" in stage:
             print("Stage2")
             model_.unfreeze_base()
 
@@ -33,34 +33,44 @@ class Experiment(ConfigExperiment):
     def get_datasets(self, stage: str, **kwargs):
         datasets = OrderedDict()
 
+        image_key = kwargs.get("image_key", 'image')
+        label_key = kwargs.get("label_key", 'label')
+
         train_csv = kwargs.get("train_csv", None)
         valid_csv = kwargs.get("valid_csv", None)
         infer_csv = kwargs.get("infer_csv", None)
+        image_size = kwargs.get("image_size", 224)
         root = kwargs.get("root", None)
 
         if train_csv:
-            trainset = IntelSceneDataset(
+            trainset = CsvDataset(
                 csv_file=train_csv,
                 root=root,
-                transform=Experiment.get_transforms(stage=stage, mode='train'),
+                transform=train_aug(image_size),
+                image_key=image_key,
+                label_key=label_key,
                 mode='train'
             )
             datasets["train"] = trainset
 
         if valid_csv:
-            validset = IntelSceneDataset(
+            validset = CsvDataset(
                 csv_file=valid_csv,
                 root=root,
-                transform=Experiment.get_transforms(stage=stage, mode='valid'),
+                transform=valid_aug(image_size),
+                image_key=image_key,
+                label_key=label_key,
                 mode='train'
             )
             datasets["valid"] = validset
 
         if infer_csv:
-            inferset = IntelSceneDataset(
+            inferset = CsvDataset(
                 csv_file=infer_csv,
                 root=root,
-                transform=Experiment.get_transforms(stage=stage, mode='valid'),
+                transform=valid_aug(image_size),
+                image_key=image_key,
+                label_key=label_key,
                 mode='infer'
             )
             datasets["infer"] = inferset

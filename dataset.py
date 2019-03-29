@@ -4,20 +4,28 @@ import cv2
 import os
 from torch.utils.data import Dataset
 
+
 def load_image(path):
     image = cv2.imread(path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
 
-class IntelSceneDataset(Dataset):
+class CsvDataset(Dataset):
 
-    def __init__(self, csv_file, root, transform, mode='train'):
+    def __init__(self,
+                 csv_file,
+                 root,
+                 transform,
+                 mode='train',
+                 image_key='file_name',
+                 label_key='category_id',
+                 ):
         df = pd.read_csv(csv_file)
-        self.images = df['image_name'].values
+        self.images = df[image_key].values
         self.mode = mode
         if mode == 'train':
-            self.labels = df['label'].values
+            self.labels = df[label_key].values
 
         self.transform = transform
 
@@ -41,6 +49,6 @@ class IntelSceneDataset(Dataset):
             image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
         return {
-            "features": image,
+            "images": image,
             "targets": label
         }

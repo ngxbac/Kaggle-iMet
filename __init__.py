@@ -1,7 +1,12 @@
 # flake8: noqa
-from catalyst.contrib.registry import Registry
-from catalyst.dl.experiments.runner import SupervisedRunner as Runner
+from runner import ModelRunner as Runner
 from experiment import Experiment
-from model import finetune
+from catalyst.contrib.registry import Registry
+from models.finetune import finetune
+from callbacks import F1Callback
 
+# Register model
 Registry.model(finetune)
+
+# Register callback
+Registry.callback(F1Callback)

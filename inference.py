@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
-import torch
 from collections import OrderedDict  # noqa F401
 from torch.utils.data import DataLoader
 from catalyst.dl.experiments import SupervisedRunner
 from catalyst.dl.callbacks import InferCallback, CheckpointCallback
 import json
 import yaml
-from model import Finetune
+from models.model import Finetune
 from experiment import Experiment
-from dataset import IntelSceneDataset
+from dataset import CsvDataset
 import glob
 
 
@@ -40,7 +39,7 @@ if __name__ == "__main__":
             if infer_csv:
                 transforms = Experiment.get_transforms(stage='infer', mode='infer')
                 for i, transform in enumerate(transforms):
-                    inferset = IntelSceneDataset(
+                    inferset = CsvDataset(
                         csv_file=infer_csv,
                         root=root,
                         transform=transform,
