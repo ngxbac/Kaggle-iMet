@@ -1,36 +1,7 @@
 import torch
 import torch.nn as nn
 from cnn_finetune import make_model
-
-
-
-"""
-        self.model = make_model(
-            model_name=arch,
-            num_classes=n_class,
-            pretrained=pretrained,
-            input_size=(image_size, image_size),
-        )
-        
-        self.embedding_hour = nn.Sequential(
-            nn.Embedding(num_embeddings=n_hour+1, embedding_dim=embedding_dim),
-            nn.Dropout(0.25),
-            GlobalConcatPool1d(),
-        )
-        
-        self.embedding_day = nn.Sequential(
-            nn.Embedding(num_embeddings=n_day+1, embedding_dim=embedding_dim),
-            nn.Dropout(0.25),
-            GlobalConcatPool1d(),
-        )
-            
-        self.embedding_month = nn.Sequential(
-            nn.Embedding(num_embeddings=n_month+1, embedding_dim=embedding_dim),
-            nn.Dropout(0.25),
-            GlobalConcatPool1d(),
-        )
-
-"""
+from .cbam_cam import ResidualNet as AttentionResnet
 
 
 class Finetune(nn.Module):
@@ -59,8 +30,6 @@ class Finetune(nn.Module):
             param.requires_grad = True
 
     def forward(self, x):
-        # import pdb
-        # pdb.set_trace()
         return self.model(x)
 
     
@@ -173,9 +142,49 @@ class FinetuneEmbedding(nn.Module):
         return x
 
 
+class FinetuneCBAM(nn.Module):
+    def __init__(
+        self,
+        arch="se_resnet50",
+        n_class=6,
+        pretrained=True,
+        image_size=256,
+        **kwargs
+    ):
+        super(FinetuneCBAM, self).__init__()
+        self.model = AttentionResnet(
+            pretrained=pretrained,
+            network_type='ImageNet',
+            depth=50,
+            num_classes=1000,
+            att_type='CBAM'
+        )
+
+        self.fc = nn.Linear(
+            self.model.fc.in_features,
+            n_class
+        )
+
+    def freeze_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+    def unfreeze_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+    def forward(self, x):
+        x = self.model.features(x)
+        return self.fc(x)
+
+
 def finetune(params):
     return Finetune(**params)
 
 
 def finetune_embedding(params):
     return FinetuneEmbedding(**params)
+
+
+def finetune_cbam(params):
+    return FinetuneCBAM(**params)

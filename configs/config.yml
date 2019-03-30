@@ -1,5 +1,5 @@
 model_params:
-  model: finetune
+  model: finetune_cbam
   params:
     arch: se_resnext50_32x4d
     n_class: 23

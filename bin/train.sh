@@ -7,9 +7,9 @@ export PYTHONPATH
 
 echo "Training..."
 
-for model in densenet121 densenet169 resnet50 inception_v3 inception_v4; do
+for model in cbam; do
     for fold in 0 1 2 3 4 5 6; do
-        LOGDIR=/media/ngxbac/DATA/logs_iwildcam/${model}/fold_${fold}/
+        LOGDIR=/media/ngxbac/DATA/logs_iwildcam/${model}_cbam/fold_${fold}/
         catalyst-dl run --config=./iwildcam/configs/config.yml \
                         --logdir=$LOGDIR \
                         --model_params/params/arch=$model:str \

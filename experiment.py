@@ -8,6 +8,10 @@ from augmentation import train_aug, valid_aug, infer_tta_aug
 
 class Experiment(ConfigExperiment):
     def _postprocess_model_for_stage(self, stage: str, model: nn.Module):
+
+        import warnings
+        warnings.filterwarnings("ignore")
+
         model_ = model
         if isinstance(model, torch.nn.DataParallel):
             model_ = model_.module
