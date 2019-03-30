@@ -7,7 +7,7 @@ export PYTHONPATH
 
 echo "Training..."
 
-for model in resnet34; do
+for model in densenet121 densenet169 resnet50 inception_v3 inception_v4; do
     for fold in 0 1 2 3 4 5 6; do
         LOGDIR=/media/ngxbac/DATA/logs_iwildcam/${model}/fold_${fold}/
         catalyst-dl run --config=./iwildcam/configs/config.yml \

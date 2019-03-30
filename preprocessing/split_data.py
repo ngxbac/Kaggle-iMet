@@ -6,6 +6,7 @@ from sklearn.model_selection import StratifiedKFold, GroupKFold
 
 def main(args):
     train_df = pd.read_csv(args.train_csv)
+    train_df = train_df[train_df['category_id'] !=0]
 
     locations = train_df['location'].values
     y = train_df['category_id'].values

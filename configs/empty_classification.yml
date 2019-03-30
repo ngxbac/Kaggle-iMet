@@ -1,14 +1,10 @@
 model_params:
   model: finetune
   params:
-    arch: se_resnext50_32x4d
-    n_class: 23
+    arch: resnet34
+    n_class: 1
     image_size: &image_size 224
     pretrained: True
-    n_hour: 24
-    n_day: 31
-    n_month: 12
-    embedding_dim: 10
 
 
 args:
@@ -23,7 +19,7 @@ stages:
     minimize_metric: False
 
   criterion_params:
-    criterion: CrossEntropyLoss
+    criterion: BCELossWightLogits
 
   scheduler_params:
     scheduler: ReduceLROnPlateau
@@ -49,7 +45,7 @@ stages:
       label_key: 'category_id'
 
     state_params:
-      n_epochs: 1
+      n_epochs: 5
 
     optimizer_params:
       optimizer: Adam
@@ -70,50 +66,49 @@ stages:
         callback: CheckpointCallback
         save_n_best: 5
 
-
-#   stage2:
-
-#     data_params:
-#       batch_size: 32
-#       n_workers: 4
-#       drop_last: False
-
-#       train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
-#       valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
-#       root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
-#       image_size: *image_size
-
-#       # CsvDataset settings
-#       image_key: 'file_name'
-#       label_key: 'category_id'
-
-#     state_params:
-#       n_epochs: 1
-
-#     optimizer_params:
-#       optimizer: Adam
-#       lr: 0.00001
-#       weight_decay: 0.0001
-
-#     callbacks_params:
-#       loss:
-#         callback: LossCallback
-#       optimizer:
-#         callback: OptimizerCallback
-#       f1:
-#         callback: F1Callback
-#       scheduler:
-#         callback: SchedulerCallback
-#         reduce_metric: *reduce_metric
-#       saver:
-#         callback: CheckpointCallback
-#         save_n_best: 5
-
+  # tune
+#  stage2:
+#
+#    data_params:
+#      batch_size: 32
+#      n_workers: 4
+#      drop_last: False
+#
+#      train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
+#      valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
+#      root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
+#      image_size: *image_size
+#
+#      # CsvDataset settings
+#      image_key: 'file_name'
+#      label_key: 'category_id'
+#
+#    state_params:
+#      n_epochs: 5
+#
+#    callbacks_params:
+#      loss:
+#        callback: LossCallback
+#      optimizer:
+#        callback: OptimizerCallback
+#      f1:
+#        callback: F1Callback
+#      scheduler:
+#        callback: SchedulerCallback
+#        reduce_metric: *reduce_metric
+#      saver:
+#        callback: CheckpointCallback
+#        save_n_best: 5
+#
+#    optimizer_params:
+#      optimizer: Adam
+#      lr: 0.0001
+#      weight_decay: 0.0001
 
   infer:
     data_params:
       n_workers: 4
-      batch_size: 16
+      batch_size: 64
       drop_last: False
 
       infer_csv: "/media/ngxbac/Bac2/fgvc6/data/test.csv"
@@ -134,14 +129,3 @@ stages:
         callback: InferCallback
         out_dir: ""
         out_prefix: "/predicts/{suffix}.npy"
-
-#  # tune
-#  stage2:
-#
-#    state_params:
-#      n_epochs: 3
-#
-#    optimizer_params:
-#      optimizer: Adam
-#      lr: 0.0001
-#      weight_decay: 0.0001
