@@ -49,7 +49,7 @@ def softmax(X, theta=1.0, axis=None):
 
 if __name__ == '__main__':
     preds = []
-    for model_name in ["resnet34"]:
+    for model_name in ["se_resnext101_32x4d"]:
         for fold in [0, 1, 2, 3, 4]:
             # for checkpoint in range(5):
             pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all/fold_{fold}/predicts/infer_0.logits.npy")
@@ -71,5 +71,5 @@ if __name__ == '__main__':
     submission['Id'] = test_df['file_name']
     submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
     submission['Predicted'] = preds
-    submission.to_csv(f"./submission/resnet34_external.csv", index=False)
-    submission.to_csv(f"./submission/resnet34_external.csv.gz", index=False, compression='gzip')
+    submission.to_csv(f"./submission/se_resnext50_32x4d_external.csv", index=False)
+    submission.to_csv(f"./submission/se_resnext50_32x4d_external.csv.gz", index=False, compression='gzip')
