@@ -16,6 +16,7 @@ class CsvDataset(Dataset):
     def __init__(self,
                  csv_file,
                  root,
+                 root_external,
                  transform,
                  mode='train',
                  image_key='file_name',
@@ -23,38 +24,37 @@ class CsvDataset(Dataset):
                  ):
         df = pd.read_csv(csv_file, nrows=None)
         
-        df['date_time'] = pd.to_datetime(df['date_captured'], errors='coerce')
-        df["year"] = df['date_time'].dt.year
-        df["month"] = df['date_time'].dt.month
-        df["day"] = df['date_time'].dt.day
-        df["hour"] = df['date_time'].dt.hour
-        df["minute"] = df['date_time'].dt.minute
-        
-        self.images = df[image_key].values
-        self.hours = df["hour"].values.astype(np.long)
-        self.days = df["day"].values.astype(np.long)
-        self.months = df["month"].values.astype(np.long)
-        
         self.mode = mode
+        self.images = df[image_key].values
         if mode == 'train':
             self.labels = df[label_key].values
 
         self.transform = transform
+        
+        if "is_inat" in df.columns:
+            self.is_externals = df["is_inat"].values
+        else:
+            self.is_externals = []
 
         self.root = root
+        self.root_external = root_external
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, idx):
         image = self.images[idx]
-        image = os.path.join(self.root, image)
-        image = load_image(image)
         
-        # Date time
-        hour = self.hours[idx]
-        day = self.days[idx]
-        month = self.months[idx]
+        if len(self.is_externals):
+            is_external = self.is_externals[idx]
+            if is_external:
+                image = os.path.join(self.root_external, image)
+            else:
+                image = os.path.join(self.root, image)
+        else:
+            image = os.path.join(self.root, image)
+
+        image = load_image(image)
 
         if self.mode == 'train':
             label = self.labels[idx]
@@ -67,8 +67,5 @@ class CsvDataset(Dataset):
 
         return {
             "images": image,
-            "hours": hour,
-            "days": day,
-            "months": month,
             "targets": label
         }

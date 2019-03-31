@@ -5,7 +5,7 @@ def train_aug(image_size=224):
     return Compose([
         Resize(image_size, image_size),
         CLAHE(clip_limit=2),
-        ToGray(),
+#         ToGray(),
         RandomBrightnessContrast(),
         Rotate(limit=5),
         HorizontalFlip(),

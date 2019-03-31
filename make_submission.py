@@ -49,16 +49,16 @@ def softmax(X, theta=1.0, axis=None):
 
 if __name__ == '__main__':
     preds = []
-    for model_name in ["densenet121"]:
-        for fold in [0, 1, 2, 3, 4, 5, 6]:
+    for model_name in ["resnet34"]:
+        for fold in [0, 1, 2, 3, 4]:
             # for checkpoint in range(5):
-            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predicts/infer_0.logits.npy")
+            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all/fold_{fold}/predicts/infer_0.logits.npy")
             pred = softmax(pred, axis=1)
             preds.append(pred)
 
-            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predicts/infer_1.logits.npy")
-            pred = softmax(pred, axis=1)
-            preds.append(pred)
+#             pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predicts/infer_1.logits.npy")
+#             pred = softmax(pred, axis=1)
+#             preds.append(pred)
 
     print(len(preds))
     preds = np.asarray(preds)
@@ -71,5 +71,5 @@ if __name__ == '__main__':
     submission['Id'] = test_df['file_name']
     submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
     submission['Predicted'] = preds
-    submission.to_csv(f"./submission/densenet121.csv", index=False)
-    submission.to_csv(f"./submission/densenet121.csv.gz", index=False, compression='gzip')
+    submission.to_csv(f"./submission/resnet34_external.csv", index=False)
+    submission.to_csv(f"./submission/resnet34_external.csv.gz", index=False, compression='gzip')

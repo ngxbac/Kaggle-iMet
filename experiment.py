@@ -46,11 +46,13 @@ class Experiment(ConfigExperiment):
         image_size = kwargs.get("image_size", 224)
         test_tta = kwargs.get("use_tta", False)
         root = kwargs.get("root", None)
+        root_external = kwargs.get("root_external", None)
 
         if train_csv:
             trainset = CsvDataset(
                 csv_file=train_csv,
                 root=root,
+                root_external=root_external,
                 transform=train_aug(image_size),
                 image_key=image_key,
                 label_key=label_key,
@@ -62,6 +64,7 @@ class Experiment(ConfigExperiment):
             validset = CsvDataset(
                 csv_file=valid_csv,
                 root=root,
+                root_external=root_external,
                 transform=valid_aug(image_size),
                 image_key=image_key,
                 label_key=label_key,
@@ -75,6 +78,7 @@ class Experiment(ConfigExperiment):
                 inferset = CsvDataset(
                     csv_file=infer_csv,
                     root=root,
+                    root_external=root_external,
                     transform=transforms[0],
                     image_key=image_key,
                     label_key=label_key,
@@ -86,6 +90,7 @@ class Experiment(ConfigExperiment):
                     inferset = CsvDataset(
                         csv_file=infer_csv,
                         root=root,
+                        root_external=root_external,
                         transform=transform,
                         image_key=image_key,
                         label_key=label_key,

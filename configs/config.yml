@@ -1,5 +1,5 @@
 model_params:
-  model: finetune_cbam
+  model: finetune
   params:
     arch: se_resnext50_32x4d
     n_class: 23
@@ -42,6 +42,7 @@ stages:
       train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
       valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
       root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
+      root_external: "/media/ngxbac/Bac2/fgvc6/data/iWildCam_2019_iNat_Idaho/"
       image_size: *image_size
 
       # CsvDataset settings
@@ -118,6 +119,7 @@ stages:
 
       infer_csv: "/media/ngxbac/Bac2/fgvc6/data/test.csv"
       root: "/media/ngxbac/Bac2/fgvc6/data/test_224/"
+      root_external: "/media/ngxbac/Bac2/fgvc6/data/iWildCam_2019_iNat_Idaho/"
 
       image_size: *image_size
 
