@@ -4,7 +4,7 @@ from torch.autograd import Variable
 
 
 class FocalLossSoftmax(nn.Module):
-    def __init__(self, gamma=0, size_average=True):
+    def __init__(self, gamma=2, size_average=True):
         super(FocalLossSoftmax, self).__init__()
         self.gamma = gamma
         self.size_average = size_average

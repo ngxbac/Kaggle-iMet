@@ -52,7 +52,7 @@ if __name__ == '__main__':
     for model_name in ["se_resnext50_32x4d"]:
         for fold in [0, 1, 2, 3, 4]:
             # for checkpoint in range(5):
-            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all_clean_2epoch/fold_{fold}/predicts_0/predictions.infer.logits.0.npy")
+            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all_focalloss/fold_{fold}/predicts/infer_0.logits.npy")
             pred = softmax(pred, axis=1)
             preds.append(pred)
 
@@ -71,5 +71,5 @@ if __name__ == '__main__':
     submission['Id'] = test_df['file_name']
     submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
     submission['Predicted'] = preds
-    submission.to_csv(f"./submission/se_resnext50_32x4d_clean.csv", index=False)
-    submission.to_csv(f"./submission/se_resnext50_32x4d_clean.csv.gz", index=False, compression='gzip')
+    submission.to_csv(f"./submission/se_resnext50_32x4d_all_focalloss.csv", index=False)
+    submission.to_csv(f"./submission/se_resnext50_32x4d_all_focalloss.csv.gz", index=False, compression='gzip')

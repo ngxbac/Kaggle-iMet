@@ -11,6 +11,21 @@ def load_image(path):
     return image
 
 
+def random_sampling(df, label_key, ignore_label=0, ratio=0.75):
+    all_labels = df[label_key].unique()
+    up_df = []
+    for label in all_labels:
+        label_df = df[df[label_key] == label]
+        if label != ignore_label:
+            upsampling_df = label_df.sample(int(len(label_df) * ratio), replace=False)
+            label_df = pd.concat([label_df, upsampling_df], axis=0)
+
+        up_df.append(label_df)
+
+    up_df = pd.concat(up_df, axis=0)
+    return up_df
+
+
 class CsvDataset(Dataset):
 
     def __init__(self,
@@ -25,10 +40,13 @@ class CsvDataset(Dataset):
         df = pd.read_csv(csv_file, nrows=None)
         
         self.mode = mode
-        self.images = df[image_key].values
         if mode == 'train':
+            # if 'train' in csv_file:
+            #     df = random_sampling(df, label_key=label_key, ratio=0.75)
+            #     print("Upsampling {}".format(csv_file))
             self.labels = df[label_key].values
 
+        self.images = df[image_key].values
         self.transform = transform
         
         if "is_inat" in df.columns:

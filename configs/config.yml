@@ -23,7 +23,8 @@ stages:
     minimize_metric: False
 
   criterion_params:
-    criterion: CrossEntropyLoss
+    criterion: FocalLossSoftmax
+    gamma: 2
 
   scheduler_params:
     scheduler: ReduceLROnPlateau
@@ -50,7 +51,7 @@ stages:
       label_key: 'category_id'
 
     state_params:
-      n_epochs: 2
+      n_epochs: 1
 
     optimizer_params:
       optimizer: Adam
