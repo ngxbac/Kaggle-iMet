@@ -19,6 +19,7 @@ stages:
       batch_size: 64
       infer_csv: "/media/ngxbac/Bac2/fgvc6/data/test.csv"
       root: "/media/ngxbac/Bac2/fgvc6/data/test_224/"
+      root_external: "/media/ngxbac/Bac2/fgvc6/data/iWildCam_2019_iNat_Idaho/"
 
       image_size: *image_size
 

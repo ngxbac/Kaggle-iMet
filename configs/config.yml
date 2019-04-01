@@ -35,7 +35,7 @@ stages:
   stage1:
 
     data_params:
-      batch_size: 64
+      batch_size: 32
       n_workers: 4
       drop_last: False
 
@@ -50,7 +50,7 @@ stages:
       label_key: 'category_id'
 
     state_params:
-      n_epochs: 1
+      n_epochs: 2
 
     optimizer_params:
       optimizer: Adam
