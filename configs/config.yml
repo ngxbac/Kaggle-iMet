@@ -23,8 +23,8 @@ stages:
     minimize_metric: False
 
   criterion_params:
-    criterion: FocalLossSoftmax
-    gamma: 2
+    criterion: CrossEntropyLoss
+#    gamma: 2
 
   scheduler_params:
     scheduler: ReduceLROnPlateau
@@ -72,44 +72,44 @@ stages:
         callback: CheckpointCallback
         save_n_best: 5
 
+  stage2:
 
-#   stage2:
+    data_params:
+      batch_size: 32
+      n_workers: 4
+      drop_last: False
 
-#     data_params:
-#       batch_size: 32
-#       n_workers: 4
-#       drop_last: False
+      train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
+      valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
+      root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
+      root_external: "/media/ngxbac/Bac2/fgvc6/data/iWildCam_2019_iNat_Idaho/"
+      image_size: *image_size
 
-#       train_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/train_0.csv.gz"
-#       valid_csv: "/media/ngxbac/Bac2/fgvc6/iwildcam/csv/kfold/valid_0.csv.gz"
-#       root: "/media/ngxbac/Bac2/fgvc6/data/train_224/"
-#       image_size: *image_size
+      # CsvDataset settings
+      image_key: 'file_name'
+      label_key: 'category_id'
 
-#       # CsvDataset settings
-#       image_key: 'file_name'
-#       label_key: 'category_id'
+    state_params:
+      n_epochs: 1
 
-#     state_params:
-#       n_epochs: 1
+    optimizer_params:
+      optimizer: Adam
+      lr: 0.000001
+      weight_decay: 0.0001
 
-#     optimizer_params:
-#       optimizer: Adam
-#       lr: 0.00001
-#       weight_decay: 0.0001
-
-#     callbacks_params:
-#       loss:
-#         callback: LossCallback
-#       optimizer:
-#         callback: OptimizerCallback
-#       f1:
-#         callback: F1Callback
-#       scheduler:
-#         callback: SchedulerCallback
-#         reduce_metric: *reduce_metric
-#       saver:
-#         callback: CheckpointCallback
-#         save_n_best: 5
+    callbacks_params:
+      loss:
+        callback: LossCallback
+      optimizer:
+        callback: OptimizerCallback
+      f1:
+        callback: F1Callback
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+        save_n_best: 5
 
 
   infer:
@@ -128,7 +128,7 @@ stages:
       image_key: 'file_name'
       label_key: 'category_id'
 
-      use_tta: True
+      use_tta: False
 
     callbacks_params:
       loader:
