@@ -93,14 +93,6 @@ class FbetaCallback(Callback):
 
         self.outputs = np.concatenate(self.outputs, axis=0)
         self.labels = np.concatenate(self.labels, axis=0)
-        
-        precision, recall, f_score, true_sum = precision_recall_fscore_support(
-            self.labels, 
-            self.outputs > self.th, 
-            beta=self.beta, 
-            average="macro"
-        )
 
-        state.metrics.epoch_values[state.loader_name]['p'] = precision
-        state.metrics.epoch_values[state.loader_name]['r'] = recall
-        state.metrics.epoch_values[state.loader_name]['fbeta'] = f_score
+        fscore = fbeta_score(y_pred=self.outputs > self.th, y_true=self.labels, beta=self.beta, average="samples")
+        state.metrics.epoch_values[state.loader_name]['fbeta'] = fscore

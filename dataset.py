@@ -63,11 +63,11 @@ class CsvDataset(Dataset):
         if self.mode == 'train':
             label = self.labels[idx]
             label = [int(l) for l in label.split(' ')]
-            label_arr = np.zeros((NUM_CLASSES, )).astype(np.float32)
+            label_arr = np.zeros(NUM_CLASSES).astype(np.float32)
             for l in label:
                 label_arr[l] = 1
         else:
-            label_arr = np.zeros((NUM_CLASSES, )).astype(np.float32)
+            label_arr = np.zeros(NUM_CLASSES).astype(np.float32)
 
         if self.transform:
             image = self.transform(image=image)['image']
