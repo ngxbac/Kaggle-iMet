@@ -4,6 +4,8 @@ import cv2
 import os
 from torch.utils.data import Dataset
 
+NUM_CLASSES = 1103
+
 
 def load_image(path):
     image = cv2.imread(path)
@@ -41,19 +43,11 @@ class CsvDataset(Dataset):
         
         self.mode = mode
         if mode == 'train':
-            # if 'train' in csv_file:
-            #     df = random_sampling(df, label_key=label_key, ratio=0.75)
-            #     print("Upsampling {}".format(csv_file))
             self.labels = df[label_key].values
 
         self.images = df[image_key].values
         self.transform = transform
         
-        if "is_inat" in df.columns:
-            self.is_externals = df["is_inat"].values
-        else:
-            self.is_externals = []
-
         self.root = root
         self.root_external = root_external
 
@@ -62,22 +56,18 @@ class CsvDataset(Dataset):
 
     def __getitem__(self, idx):
         image = self.images[idx]
-        
-        if len(self.is_externals):
-            is_external = self.is_externals[idx]
-            if is_external:
-                image = os.path.join(self.root_external, image)
-            else:
-                image = os.path.join(self.root, image)
-        else:
-            image = os.path.join(self.root, image)
+        image = os.path.join(self.root, image + '.png')
 
         image = load_image(image)
 
         if self.mode == 'train':
             label = self.labels[idx]
+            label = [int(l) for l in label.split(' ')]
+            label_arr = np.zeros((NUM_CLASSES, )).astype(np.float32)
+            for l in label:
+                label_arr[l] = 1
         else:
-            label = 0
+            label_arr = np.zeros((NUM_CLASSES, )).astype(np.float32)
 
         if self.transform:
             image = self.transform(image=image)['image']
@@ -85,5 +75,5 @@ class CsvDataset(Dataset):
 
         return {
             "images": image,
-            "targets": label
+            "targets": label_arr
         }

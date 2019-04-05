@@ -4,10 +4,10 @@ from albumentations import *
 def train_aug(image_size=224):
     return Compose([
         Resize(image_size, image_size),
-        CLAHE(clip_limit=2),
+#         CLAHE(clip_limit=2),
 #         ToGray(),
-        RandomBrightnessContrast(),
-        Rotate(limit=5),
+#         RandomBrightnessContrast(),
+#         Rotate(limit=5),
         HorizontalFlip(),
         Normalize(),
     ], p=1)

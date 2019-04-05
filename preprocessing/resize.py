@@ -18,7 +18,7 @@ def resize_and_save(image_path, dest, image_size):
 
 def main(args):
     os.makedirs(args.output_folder, exist_ok=True)
-    all_images = glob.glob(f"{args.input_folder}/*.jpg")
+    all_images = glob.glob(f"{args.input_folder}/*.png")
     Parallel(n_jobs=4)(delayed(resize_and_save)(image_path, args.output_folder, args.image_size)
                        for image_path in tqdm(all_images))
 
