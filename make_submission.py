@@ -1,75 +1,37 @@
+import os
 import pandas as pd
 import numpy as np
 from scipy.stats.mstats import gmean
 
 
-def softmax(X, theta=1.0, axis=None):
-    """
-    Compute the softmax of each element along an axis of X.
-
-    Parameters
-    ----------
-    X: ND-Array. Probably should be floats.
-    theta (optional): float parameter, used as a multiplier
-        prior to exponentiation. Default = 1.0
-    axis (optional): axis to compute values along. Default is the
-        first non-singleton axis.
-
-    Returns an array the same size as X. The result will sum to 1
-    along the specified axis.
-    """
-
-    # make X at least 2d
-    y = np.atleast_2d(X)
-
-    # find axis
-    if axis is None:
-        axis = next(j[0] for j in enumerate(y.shape) if j[1] > 1)
-
-    # multiply y against the theta parameter,
-    y = y * float(theta)
-
-    # subtract the max for numerical stability
-    y = y - np.expand_dims(np.max(y, axis=axis), axis)
-
-    # exponentiate y
-    y = np.exp(y)
-
-    # take the sum along the specified axis
-    ax_sum = np.expand_dims(np.sum(y, axis=axis), axis)
-
-    # finally: divide elementwise
-    p = y / ax_sum
-
-    # flatten if X was 1D
-    if len(X.shape) == 1: p = p.flatten()
-
-    return p
+def sigmoid(x, derivative=False):
+    return x*(1-x) if derivative else 1/(1+np.exp(-x))
 
 
 if __name__ == '__main__':
+    os.makedirs("submission", exist_ok=True)
+    threshold = 0.3
     preds = []
-    for model_name in ["se_resnext50_32x4d"]:
-        for fold in [0, 1, 2, 3, 4]:
+    for model_name in ["resnet34"]:
+        for fold in [0]:
             # for checkpoint in range(5):
-            pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all_focalloss/fold_{fold}/predicts/infer_0.logits.npy")
-            pred = softmax(pred, axis=1)
+            pred = np.load(f"./logs_imet/{model_name}/fold_{fold}/predicts/infer.logits.npy")
+            pred = sigmoid(pred)
             preds.append(pred)
-
-#             pred = np.load(f"/media/ngxbac/DATA/logs_iwildcam/{model_name}/fold_{fold}/predicts/infer_1.logits.npy")
-#             pred = softmax(pred, axis=1)
-#             preds.append(pred)
 
     print(len(preds))
     preds = np.asarray(preds)
     preds = np.mean(preds, axis=0)
     print(preds.shape)
-    preds = np.argmax(preds, axis=1)
+    preds = preds > threshold
+    
+    prediction = []
+    for i in range(preds.shape[0]):
+        pred1 = np.argwhere(preds[i] == 1.0).reshape(-1).tolist()
+        pred_str = " ".join(list(map(str, pred1)))
+        prediction.append(pred_str)
 
-    test_df = pd.read_csv("/media/ngxbac/Bac2/fgvc6/data/test.csv")
-    submission = pd.DataFrame()
-    submission['Id'] = test_df['file_name']
-    submission['Id'] = submission['Id'].apply(lambda x: x.split(".")[0])
-    submission['Predicted'] = preds
-    submission.to_csv(f"./submission/se_resnext50_32x4d_all_focalloss.csv", index=False)
-    submission.to_csv(f"./submission/se_resnext50_32x4d_all_focalloss.csv.gz", index=False, compression='gzip')
+    test_df = pd.read_csv("./data/sample_submission.csv")
+    test_df.attribute_ids = prediction
+    test_df.to_csv(f"./submission/resnet34.csv", index=False)
+    print(test_df.head())
