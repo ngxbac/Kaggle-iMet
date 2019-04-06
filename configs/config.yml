@@ -19,7 +19,7 @@ stages:
     minimize_metric: False
 
   criterion_params:
-    criterion: BCEWithLogitsLoss
+    criterion: BCEFbetaFocalLoss
 #    gamma: 2
 
   scheduler_params:
@@ -38,7 +38,7 @@ stages:
 
       train_csv: "./imet/csv/kfold6/train_0.csv.gz"
       valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
-      root: "./data/train/"
+      root: "/home/ubuntu2/ngxbac/imet/train/"
       image_size: *image_size
 
       # CsvDataset settings
@@ -76,7 +76,7 @@ stages:
 
       train_csv: "./imet/csv/kfold6/train_0.csv.gz"
       valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
-      root: "./data/train/"
+      root: "/home/ubuntu2/ngxbac/imet/train/"
       
       image_size: *image_size
 
@@ -114,7 +114,7 @@ stages:
       drop_last: False
 
       infer_csv: "./data/sample_submission.csv"
-      root: "./data/test/"
+      root: "/home/ubuntu2/ngxbac/imet/test/"
 
       image_size: *image_size
 

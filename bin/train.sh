@@ -11,7 +11,7 @@ export CUDA_VISIBLE_DEVICES=1
 
 for model in resnet34; do
     for fold in 0; do
-        LOGDIR=./logs_imet/${model}/fold_${fold}/
+        LOGDIR=./logs_imet/${model}_bcef2focal/fold_${fold}/
         catalyst-dl run --config=./imet/configs/config.yml \
                         --logdir=$LOGDIR \
                         --model_params/params/arch=$model:str \

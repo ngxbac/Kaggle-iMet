@@ -15,7 +15,7 @@ if __name__ == '__main__':
     for model_name in ["resnet34"]:
         for fold in [0]:
             # for checkpoint in range(5):
-            pred = np.load(f"./logs_imet/{model_name}/fold_{fold}/predicts/infer.logits.npy")
+            pred = np.load(f"./logs_imet/{model_name}_bcef2focal/fold_{fold}/predicts/infer.logits.npy")
             pred = sigmoid(pred)
             preds.append(pred)
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     preds = np.mean(preds, axis=0)
     print(preds.shape)
     preds = preds > threshold
-    
+
     prediction = []
     for i in range(preds.shape[0]):
         pred1 = np.argwhere(preds[i] == 1.0).reshape(-1).tolist()
