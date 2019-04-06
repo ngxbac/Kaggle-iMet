@@ -3,7 +3,7 @@ model_params:
   params:
     arch: resnet34
     n_class: 1103
-    image_size: &image_size 224
+    image_size: &image_size 299
     pretrained: True
 
 

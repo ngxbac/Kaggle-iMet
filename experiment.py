@@ -22,6 +22,10 @@ class Experiment(ConfigExperiment):
         elif "stage2" in stage:
             print("Stage2")
             model_.unfreeze_base()
+        elif "infer" in stage:
+            print("Inference stage ... ")
+            if hasattr(model, 'is_infer'):
+                model.is_infer = True
 
         return model_
 

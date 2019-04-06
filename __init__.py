@@ -2,7 +2,7 @@
 from runner import ModelRunner as Runner
 from experiment import Experiment
 from catalyst.contrib.registry import Registry
-from models.finetune import *
+from models import *
 from callbacks import *
 from losses import *
 
@@ -10,10 +10,13 @@ from losses import *
 Registry.model(finetune)
 Registry.model(finetune_embedding)
 Registry.model(finetune_cbam)
+Registry.model(inception_v3_deepsupervision)
 
 # Register callback
 Registry.callback(F1Callback)
 Registry.callback(FbetaCallback)
+Registry.callback(LossDeepSupervisionCallback)
+Registry.callback(FbetaDeepSupervisionCallback)
 
 # Register loss
 Registry.criterion(FocalLoss)

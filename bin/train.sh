@@ -7,9 +7,9 @@ export PYTHONPATH
 
 echo "Training..."
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=1,2
 
-for model in resnet34; do
+for model in inception_v3; do
     for fold in 0; do
         LOGDIR=./logs_imet/${model}_bcef2focal/fold_${fold}/
         catalyst-dl run --config=./imet/configs/config.yml \
