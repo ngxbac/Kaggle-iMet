@@ -1,0 +1,158 @@
+model_params:
+  model: finetune
+  params:
+    arch: resnet34
+    n_class: 1103
+    image_size: &image_size 224
+    pretrained: True
+
+
+args:
+  expdir: ""
+  logdir: "./logs/imet/"
+
+
+stages:
+
+  state_params:
+    main_metric: &reduce_metric avg_fbeta
+    minimize_metric: False
+
+  criterion_params:
+    criterion: TwoHeadsLoss
+#    gamma: 2
+
+  scheduler_params:
+    scheduler: ReduceLROnPlateau
+    patience: 5
+    factor: 0.1
+    mode: max
+    verbose: True
+
+  stage1:
+
+    data_params:
+      batch_size: 32
+      n_workers: 4
+      drop_last: False
+
+      image_size: *image_size
+
+      dataset:
+        dataset_name: TwoHeadDataset
+        train:
+          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+        valid:
+          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+    state_params:
+      n_epochs: 1
+
+    optimizer_params:
+      optimizer: Adam
+      lr: 0.0001
+      weight_decay: 0.0001
+
+    callbacks_params:
+      loss:
+        callback: LossTwoHeadCallback
+      optimizer:
+        callback: OptimizerCallback
+      f1:
+        callback: FbetaTwoHeadsCallback
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+        save_n_best: 5
+
+  stage2:
+
+    data_params:
+      batch_size: 32
+      n_workers: 4
+      drop_last: False
+
+      image_size: *image_size
+
+      dataset:
+        dataset_name: TwoHeadDataset
+        train:
+          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+        valid:
+          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+    state_params:
+      n_epochs: 10
+
+    optimizer_params:
+      optimizer: Adam
+      lr: 0.00001
+      weight_decay: 0.0001
+
+    callbacks_params:
+      loss:
+        callback: LossTwoHeadCallback
+      optimizer:
+        callback: OptimizerCallback
+      f1:
+        callback: FbetaTwoHeadsCallback
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+        save_n_best: 5
+
+
+  infer:
+    data_params:
+      n_workers: 4
+      batch_size: 16
+      drop_last: False
+
+      image_size: *image_size
+
+      dataset:
+        dataset_name: TwoHeadDataset
+        infer:
+          csv_file: "./data/sample_submission.csv"
+          root: "/home/ubuntu2/ngxbac/imet/test/"
+
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'infer'
+
+      use_tta: False
+
+    callbacks_params:
+      loader:
+        callback: CheckpointCallback
+      infer:
+        callback: InferCallback
+        out_dir: ""
+        out_prefix: "/predicts/{suffix}.npy"
