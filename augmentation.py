@@ -5,6 +5,7 @@ def train_aug(image_size=224):
     return Compose([
         Resize(image_size, image_size),
         HorizontalFlip(),
+        # RandomBrightnessContrast(),
         Normalize(),
     ], p=1)
 

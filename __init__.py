@@ -17,9 +17,12 @@ Registry.callback(F1Callback)
 Registry.callback(FbetaCallback)
 Registry.callback(LossDeepSupervisionCallback)
 Registry.callback(FbetaDeepSupervisionCallback)
+Registry.callback(FbetaTwoHeadsCallback)
+Registry.callback(LossTwoHeadCallback)
 
 # Register loss
 Registry.criterion(FocalLoss)
 Registry.criterion(FbetaLoss)
 Registry.criterion(BCEAndFbeta)
 Registry.criterion(BCEFbetaFocalLoss)
+Registry.criterion(TwoHeadsLoss)

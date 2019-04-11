@@ -2,7 +2,7 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 from catalyst.dl.experiments import ConfigExperiment
-from dataset import CsvDataset
+import dataset as Dataset
 from augmentation import train_aug, valid_aug, infer_tta_aug
 
 
@@ -41,65 +41,41 @@ class Experiment(ConfigExperiment):
     def get_datasets(self, stage: str, **kwargs):
         datasets = OrderedDict()
 
-        image_key = kwargs.get("image_key", 'image')
-        label_key = kwargs.get("label_key", 'label')
+        dataset = kwargs.get('dataset', None)
+        assert dataset is not None
 
-        train_csv = kwargs.get("train_csv", None)
-        valid_csv = kwargs.get("valid_csv", None)
-        infer_csv = kwargs.get("infer_csv", None)
+        dataset_name = dataset.get("dataset_name", None)
+        assert dataset_name is not None
+        dataset_func = getattr(Dataset, dataset_name)
+
         image_size = kwargs.get("image_size", 224)
-        test_tta = kwargs.get("use_tta", False)
-        root = kwargs.get("root", None)
-        root_external = kwargs.get("root_external", None)
 
-        if train_csv:
-            trainset = CsvDataset(
-                csv_file=train_csv,
-                root=root,
-                root_external=root_external,
-                transform=train_aug(image_size),
-                image_key=image_key,
-                label_key=label_key,
-                mode='train'
-            )
-            datasets["train"] = trainset
+        train = dataset.get('train', None)
+        valid = dataset.get('valid', None)
+        infer = dataset.get('infer', None)
 
-        if valid_csv:
-            validset = CsvDataset(
-                csv_file=valid_csv,
-                root=root,
-                root_external=root_external,
-                transform=valid_aug(image_size),
-                image_key=image_key,
-                label_key=label_key,
-                mode='train'
-            )
-            datasets["valid"] = validset
+        if train:
+            transform = train_aug(image_size)
+            train.update({
+                "transform": transform
+            })
+            train_set = dataset_func(**train)
+            datasets["train"] = train_set
 
-        if infer_csv:
-            transforms = infer_tta_aug(image_size)
-            if not test_tta:
-                inferset = CsvDataset(
-                    csv_file=infer_csv,
-                    root=root,
-                    root_external=root_external,
-                    transform=transforms[0],
-                    image_key=image_key,
-                    label_key=label_key,
-                    mode='infer'
-                )
-                datasets["infer"] = inferset
-            else:
-                for i, transform in enumerate(transforms):
-                    inferset = CsvDataset(
-                        csv_file=infer_csv,
-                        root=root,
-                        root_external=root_external,
-                        transform=transform,
-                        image_key=image_key,
-                        label_key=label_key,
-                        mode='infer'
-                    )
-                    datasets[f"infer_{i}"] = inferset
+        if valid:
+            transform = valid_aug(image_size)
+            valid.update({
+                "transform": transform
+            })
+            valid_set = dataset_func(**valid)
+            datasets["valid"] = valid_set
+
+        if infer:
+            transform = valid_aug(image_size)
+            infer.update({
+                "transform": transform
+            })
+            infer_set = dataset_func(**infer)
+            datasets["infer"] = infer_set
 
         return datasets

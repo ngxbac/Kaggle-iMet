@@ -3,6 +3,7 @@ import pandas as pd
 import cv2
 import os
 from torch.utils.data import Dataset
+from sklearn.preprocessing import LabelEncoder
 
 NUM_CLASSES = 1103
 
@@ -76,4 +77,64 @@ class CsvDataset(Dataset):
         return {
             "images": image,
             "targets": label_arr
+        }
+
+
+class TwoHeadDataset(Dataset):
+
+    def __init__(self,
+                 csv_file,
+                 root,
+                 transform,
+                 mode='train',
+                 image_key='file_name',
+                 label_key='category_id',
+                 ):
+        df = pd.read_csv(csv_file, nrows=None)
+
+        self.mode = mode
+        if mode == 'train':
+            self.labels = df[label_key].values
+
+            # Softmax label
+            cls = np.load("./data/class.npy")
+            le = LabelEncoder()
+            le.classes_ = cls
+            self.labels_softmax = le.transform(self.labels)
+            np.save("softmax_label.npy", le.classes_)
+
+        self.images = df[image_key].values
+        self.transform = transform
+
+        self.root = root
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
+        image = os.path.join(self.root, image + '.png')
+
+        image = load_image(image)
+
+        if self.mode == 'train':
+            label = self.labels[idx]
+            label = [int(l) for l in label.split(' ')]
+            label_sigmoid = np.zeros(NUM_CLASSES).astype(np.float32)
+            for l in label:
+                label_sigmoid[l] = 1
+
+            label_softmax = self.labels_softmax[idx]
+        else:
+            label_sigmoid = np.zeros(NUM_CLASSES).astype(np.float32)
+            label_softmax = -1
+
+        if self.transform:
+            image = self.transform(image=image)['image']
+            image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+
+        return {
+            "images": image,
+            "sigmoid_label": label_sigmoid,
+            "softmax_label": label_softmax
         }

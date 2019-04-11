@@ -71,3 +71,19 @@ class BCEFbetaFocalLoss(nn.Module):
         focal = self.focal_loss(logits, labels)
         return 0.45 * bce + 0.45 * f1 + 0.1 * focal
 
+
+class TwoHeadsLoss(nn.Module):
+    """
+    Loss for two heads
+    """
+    def __init__(self):
+        super(TwoHeadsLoss, self).__init__()
+        self.sigmoid_loss = BCEFbetaFocalLoss()
+        self.softmax_loss = nn.CrossEntropyLoss()
+
+    def forward(self, logit_sigmoid, logit_softmax, target_sigmoid, target_softmax):
+        sigmoid_loss = self.sigmoid_loss(logit_sigmoid, target_sigmoid)
+        softmax_loss = self.softmax_loss(logit_softmax, target_softmax)
+
+        return 0.5 * sigmoid_loss + 0.5 * softmax_loss
+

@@ -12,11 +12,16 @@ class ModelRunner(SupervisedRunner):
         self.input_target_key = "targets"
 
     def predict_batch(self, batch: Mapping[str, Any]):
-        
-        if isinstance(self.model, FinetuneEmbedding):
-            logits = self.model(batch["images"], batch["hours"], batch["days"], batch["months"])
+        if 'softmax_label' in batch.keys():
+            sigmoid_logits, softmax_logits = self.model(batch["images"])
+            output = {
+                "sigmoid_logits": sigmoid_logits,
+                "softmax_logits": softmax_logits
+            }
         else:
             logits = self.model(batch["images"])
-            
-        output = {"logits": logits}
+            output = {
+                "logits": logits,
+            }
+
         return output

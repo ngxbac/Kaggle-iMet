@@ -173,3 +173,108 @@ class LossDeepSupervisionCallback(Callback):
             )
 
         state.loss = loss
+
+
+class LossTwoHeadCallback(Callback):
+    def __init__(self,
+                 sigmoid_input_key: str = "sigmoid_label",
+                 sigmoid_output_key: str = "sigmoid_logits",
+                 softmax_input_key: str = "softmax_label",
+                 softmax_output_key: str = "softmax_logits",
+                 ):
+        super(LossTwoHeadCallback, self).__init__()
+        self.sigmoid_input_key = sigmoid_input_key
+        self.sigmoid_output_key = sigmoid_output_key
+        self.softmax_input_key = softmax_input_key
+        self.softmax_output_key = softmax_output_key
+
+    def on_stage_start(self, state):
+        assert state.criterion is not None
+
+    def on_batch_end(self, state):
+
+        sigmoid_output = state.output[self.sigmoid_output_key]
+        sigmoid_input = state.input[self.sigmoid_input_key]
+        softmax_output = state.output[self.softmax_output_key]
+        softmax_input = state.input[self.softmax_input_key]
+
+
+        state.loss = state.criterion(
+            sigmoid_output, softmax_output, sigmoid_input, softmax_input
+        )
+
+
+class FbetaTwoHeadsCallback(Callback):
+    """
+    Fbeta metric callback.
+    """
+
+    def __init__(self,
+                 th: float = 0.3,
+                 beta: int = 2,
+                 sigmoid_input_key: str = "sigmoid_label",
+                 sigmoid_output_key: str = "sigmoid_logits",
+                 softmax_input_key: str = "softmax_label",
+                 softmax_output_key: str = "softmax_logits",
+                 ):
+        """
+        :param input_key: input key to use for precision calculation;
+            specifies our `y_true`.
+        :param output_key: output key to use for precision calculation;
+            specifies our `y_pred`.
+        """
+        super().__init__()
+        self.sigmoid_input_key = sigmoid_input_key
+        self.sigmoid_output_key = sigmoid_output_key
+        self.softmax_input_key = softmax_input_key
+        self.softmax_output_key = softmax_output_key
+        self.th = th
+        self.beta = beta
+
+    def on_loader_start(self, state):
+        self.sigmoid_outputs = []
+        self.sigmoid_labels = []
+
+        self.softmax_outputs = []
+        self.softmax_labels = []
+
+    def on_batch_end(self, state):
+        sigmoid_output = F.sigmoid(state.output[self.sigmoid_output_key])
+        sigmoid_output = sigmoid_output.detach().cpu().numpy()
+        sigmoid_label = state.input[self.sigmoid_input_key].detach().cpu().numpy()
+        self.sigmoid_outputs.append(sigmoid_output)
+        self.sigmoid_labels.append(sigmoid_label)
+
+        softmax_output = F.softmax(state.output[self.softmax_output_key])
+        softmax_output = softmax_output.detach().cpu().numpy()
+        softmax_label = state.input[self.softmax_input_key].detach().cpu().numpy()
+        self.softmax_outputs.append(softmax_output)
+        self.softmax_labels.append(softmax_label)
+
+    def on_loader_end(self, state):
+        import warnings
+        warnings.filterwarnings("ignore")
+
+        self.sigmoid_outputs = np.concatenate(self.sigmoid_outputs, axis=0)
+        self.sigmoid_labels = np.concatenate(self.sigmoid_labels, axis=0)
+
+        sigmoid_fscore = fbeta_score(
+            y_pred=self.sigmoid_outputs > self.th,
+            y_true=self.sigmoid_labels,
+            beta=self.beta,
+            average="samples"
+        )
+        state.metrics.epoch_values[state.loader_name]['sigmoid_fbeta'] = sigmoid_fscore
+
+        self.softmax_outputs = np.concatenate(self.softmax_outputs, axis=0)
+        self.softmax_labels = np.concatenate(self.softmax_labels, axis=0)
+
+        softmax_fscore = fbeta_score(
+            y_pred=self.softmax_outputs > self.th,
+            y_true=self.softmax_labels,
+            beta=self.beta,
+            average="samples"
+        )
+        state.metrics.epoch_values[state.loader_name]['softmax_fbeta'] = softmax_fscore
+
+        state.metrics.epoch_values[state.loader_name]['avg_fbeta'] = (softmax_fscore + sigmoid_fscore) / 2
