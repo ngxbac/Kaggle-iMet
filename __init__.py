@@ -8,9 +8,10 @@ from losses import *
 
 # Register model
 Registry.model(finetune)
-Registry.model(finetune_embedding)
 Registry.model(finetune_cbam)
 Registry.model(inception_v3_deepsupervision)
+Registry.model(finetune_fishnet)
+Registry.model(finetune_dla)
 
 # Register callback
 Registry.callback(F1Callback)

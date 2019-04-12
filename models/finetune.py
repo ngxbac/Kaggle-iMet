@@ -1,7 +1,10 @@
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
 from cnn_finetune import make_model
 from .cbam_cam import ResidualNet as AttentionResnet
+import models.fishnet as fishnet
+import models.dla as dla
 
 
 class Finetune(nn.Module):
@@ -21,14 +24,6 @@ class Finetune(nn.Module):
             input_size=(image_size, image_size),
         )
 
-        self.head_sigmoid = nn.Linear(
-            self.model._classifier.in_features, n_class
-        )
-
-        self.head_softmax = nn.Linear(
-            self.model._classifier.in_features, 50238
-        )
-
     def freeze_base(self):
         for param in self.model._features.parameters():
             param.requires_grad = False
@@ -38,12 +33,7 @@ class Finetune(nn.Module):
             param.requires_grad = True
 
     def forward(self, x):
-        features = self.model._features(x)
-        features = self.model.pool(features)
-        features = features.view(features.size(0), -1)
-        x_sigmoid = self.head_sigmoid(features)
-        x_softmax = self.head_softmax(features)
-        return x_sigmoid, x_softmax
+        return self.model(x)
 
 
 class FinetuneCBAM(nn.Module):
@@ -82,13 +72,85 @@ class FinetuneCBAM(nn.Module):
         return self.fc(x)
 
 
+class FinetuneFishNet(nn.Module):
+    def __init__(self,
+                 arch='fishnet99',
+                 pretrained=None,
+                 n_class=7
+                 ):
+        super(FinetuneFishNet, self).__init__()
+
+        self.model = getattr(fishnet, arch)(pretrained=pretrained, n_class=n_class)
+        self.model_name = arch
+        self.extract_feature = False
+
+    def forward(self, x):
+        x = self.model.conv1(x)
+        x = self.model.conv2(x)
+        x = self.model.conv3(x)
+        x = self.model.pool1(x)
+        score, score_feat = self.model.fish(x)
+        # 1*1 output
+        out = score.view(x.size(0), -1)
+        if self.extract_feature:
+            score_feat = F.adaptive_avg_pool2d(score_feat, 1)
+            score_feat = score_feat.view(x.size(0), -1)
+            return score_feat
+        else:
+            return out
+
+    def freeze_base(self):
+        pass
+
+    def unfreeze_base(self):
+        pass
+
+
+class FinetuneDLA(nn.Module):
+    def __init__(self,
+                 arch='dla34',
+                 pretrained='imagenet',
+                 n_class=7
+                 ):
+        super(FinetuneDLA, self).__init__()
+
+        self.model = getattr(dla, arch)(pretrained=pretrained, n_class=n_class)
+        self.model_name = arch
+        self.extract_feature = False
+
+    def forward(self, x):
+        return self.model(x)
+
+    def freeze_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # we want to freeze the fc layer
+        self.model.fc.weight.requires_grad = True
+        self.model.fc.requires_grad = True
+
+    def unfreeze_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+
 def finetune(params):
     return Finetune(**params)
 
 
-def finetune_embedding(params):
-    return FinetuneEmbedding(**params)
-
-
 def finetune_cbam(params):
     return FinetuneCBAM(**params)
+
+
+def finetune_fishnet(params):
+    """
+    Finetune fishmodel
+    """
+    return FinetuneFishNet(**params)
+
+
+def finetune_dla(params):
+    """
+    Finetune fishmodel
+    """
+    return FinetuneDLA(**params)

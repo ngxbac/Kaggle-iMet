@@ -1,10 +1,16 @@
 model_params:
-  model: finetune
+#  model: finetune
+##  model: finetune
+#  params:
+#    arch: resnet34
+#    n_class: 1103
+#    image_size: &image_size 224
+#    pretrained: True
+  model: &model_name finetune_dla
   params:
-    arch: resnet34
+    arch: dla34
     n_class: 1103
-    image_size: &image_size 299
-    pretrained: True
+    pretrained: "imagenet"
 
 
 args:
@@ -36,14 +42,25 @@ stages:
       n_workers: 4
       drop_last: False
 
-      train_csv: "./imet/csv/kfold6/train_0.csv.gz"
-      valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
-      root: "/home/ubuntu2/ngxbac/imet/train/"
-      image_size: *image_size
+      image_size: &image_size 224
 
-      # CsvDataset settings
-      image_key: 'id'
-      label_key: 'attribute_ids'
+      dataset:
+        dataset_name: CsvDataset
+        train:
+          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+        valid:
+          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
 
     state_params:
       n_epochs: 1
@@ -74,15 +91,25 @@ stages:
       n_workers: 4
       drop_last: False
 
-      train_csv: "./imet/csv/kfold6/train_0.csv.gz"
-      valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
-      root: "/home/ubuntu2/ngxbac/imet/train/"
-      
       image_size: *image_size
 
-      # CsvDataset settings
-      image_key: 'id'
-      label_key: 'attribute_ids'
+      dataset:
+        dataset_name: CsvDataset
+        train:
+          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
+
+        valid:
+          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          root: "/home/ubuntu2/ngxbac/imet/train/"
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'train'
 
     state_params:
       n_epochs: 10
@@ -113,14 +140,18 @@ stages:
       batch_size: 16
       drop_last: False
 
-      infer_csv: "./data/sample_submission.csv"
-      root: "/home/ubuntu2/ngxbac/imet/test/"
-
       image_size: *image_size
 
-      # CsvDataset settings
-      image_key: 'id'
-      label_key: 'attribute_ids'
+      dataset:
+        dataset_name: TwoHeadDataset
+        infer:
+          csv_file: "./data/sample_submission.csv"
+          root: "/home/ubuntu2/ngxbac/imet/test/"
+
+          # CsvDataset settings
+          image_key: 'id'
+          label_key: 'attribute_ids'
+          mode: 'infer'
 
       use_tta: False
 
