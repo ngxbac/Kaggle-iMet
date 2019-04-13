@@ -40,7 +40,7 @@ stages:
       n_workers: 4
       drop_last: False
 
-      image_size: 224
+      image_size: *image_size
 
       dataset:
         dataset_name: CsvDataset

@@ -12,11 +12,14 @@ class ModelRunner(SupervisedRunner):
         self.input_target_key = "targets"
 
     def predict_batch(self, batch: Mapping[str, Any]):
-        if 'softmax_label' in batch.keys():
-            sigmoid_logits, softmax_logits = self.model(batch["images"])
+        if 'culture_labels' in batch.keys():
+            """
+            TwoHead
+            """
+            culture_logits, tag_logits = self.model(batch["images"])
             output = {
-                "sigmoid_logits": sigmoid_logits,
-                "softmax_logits": softmax_logits
+                "culture_logits": culture_logits,
+                "tag_logits": tag_logits
             }
         else:
             logits = self.model(batch["images"])

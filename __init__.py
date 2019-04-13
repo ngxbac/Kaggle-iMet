@@ -13,6 +13,8 @@ Registry.model(inception_v3_deepsupervision)
 Registry.model(finetune_fishnet)
 Registry.model(finetune_dla)
 
+Registry.model(finetune_2heads)
+
 # Register callback
 Registry.callback(F1Callback)
 Registry.callback(FbetaCallback)

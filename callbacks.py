@@ -1,4 +1,5 @@
 import torch
+import pandas as pd
 import numpy as np
 import torch.nn.functional as F
 from catalyst.dl.callbacks import Callback
@@ -177,30 +178,29 @@ class LossDeepSupervisionCallback(Callback):
 
 class LossTwoHeadCallback(Callback):
     def __init__(self,
-                 sigmoid_input_key: str = "sigmoid_label",
-                 sigmoid_output_key: str = "sigmoid_logits",
-                 softmax_input_key: str = "softmax_label",
-                 softmax_output_key: str = "softmax_logits",
+                 culture_input_key: str = "culture_labels",
+                 culture_output_key: str = "culture_logits",
+                 tag_input_key: str = "tag_labels",
+                 tag_output_key: str = "tag_logits",
                  ):
         super(LossTwoHeadCallback, self).__init__()
-        self.sigmoid_input_key = sigmoid_input_key
-        self.sigmoid_output_key = sigmoid_output_key
-        self.softmax_input_key = softmax_input_key
-        self.softmax_output_key = softmax_output_key
+        self.culture_input_key = culture_input_key
+        self.culture_output_key = culture_output_key
+        self.tag_input_key = tag_input_key
+        self.tag_output_key = tag_output_key
 
     def on_stage_start(self, state):
         assert state.criterion is not None
 
     def on_batch_end(self, state):
 
-        sigmoid_output = state.output[self.sigmoid_output_key]
-        sigmoid_input = state.input[self.sigmoid_input_key]
-        softmax_output = state.output[self.softmax_output_key]
-        softmax_input = state.input[self.softmax_input_key]
-
+        culture_logits = state.output[self.culture_output_key]
+        culture_labels = state.input[self.culture_input_key]
+        tag_logits = state.output[self.tag_output_key]
+        tag_labels = state.input[self.tag_input_key]
 
         state.loss = state.criterion(
-            sigmoid_output, softmax_output, sigmoid_input, softmax_input
+            culture_logits, tag_logits, culture_labels, tag_labels
         )
 
 
@@ -210,12 +210,13 @@ class FbetaTwoHeadsCallback(Callback):
     """
 
     def __init__(self,
+                 label_file: str="./data/labels.csv",
                  th: float = 0.3,
                  beta: int = 2,
-                 sigmoid_input_key: str = "sigmoid_label",
-                 sigmoid_output_key: str = "sigmoid_logits",
-                 softmax_input_key: str = "softmax_label",
-                 softmax_output_key: str = "softmax_logits",
+                 culture_input_key: str = "culture_labels",
+                 culture_output_key: str = "culture_logits",
+                 tag_input_key: str = "tag_labels",
+                 tag_output_key: str = "tag_logits",
                  ):
         """
         :param input_key: input key to use for precision calculation;
@@ -224,57 +225,91 @@ class FbetaTwoHeadsCallback(Callback):
             specifies our `y_pred`.
         """
         super().__init__()
-        self.sigmoid_input_key = sigmoid_input_key
-        self.sigmoid_output_key = sigmoid_output_key
-        self.softmax_input_key = softmax_input_key
-        self.softmax_output_key = softmax_output_key
+        self.culture_input_key = culture_input_key
+        self.culture_output_key = culture_output_key
+        self.tag_input_key = tag_input_key
+        self.tag_output_key = tag_output_key
         self.th = th
         self.beta = beta
+        label_df = pd.read_csv(label_file)
+        self.attribute_names = label_df['attribute_name'].values
+        self.NUM_CLASSES = 1103
+
+        self.culture_class = np.load('./data/culture_class.npy')
+        self.tag_class = np.load('./data/tag_class.npy')
 
     def on_loader_start(self, state):
-        self.sigmoid_outputs = []
-        self.sigmoid_labels = []
+        self.culture_outputs = []
+        self.culture_labels = []
 
-        self.softmax_outputs = []
-        self.softmax_labels = []
+        self.tag_outputs = []
+        self.tag_labels = []
+
+    def merge_culture_tag(self, cultures, tags):
+        merge_arr = np.zeros((cultures.shape[0], self.NUM_CLASSES))
+
+        for i, culture in enumerate(cultures):
+            cls_idx = np.where(culture == 1)[0]
+            for idx in cls_idx:
+                cls = self.culture_class[idx]
+                merge_idx = np.where(self.attribute_names == cls)[0]
+                merge_arr[i][merge_idx] = 1
+
+        for i, tag in enumerate(tags):
+            cls_idx = np.where(tag == 1)[0]
+            for idx in cls_idx:
+                cls = self.tag_class[idx]
+                merge_idx = np.where(self.attribute_names == cls)[0]
+                merge_arr[i][merge_idx] = 1
+
+        return merge_arr
 
     def on_batch_end(self, state):
-        sigmoid_output = F.sigmoid(state.output[self.sigmoid_output_key])
-        sigmoid_output = sigmoid_output.detach().cpu().numpy()
-        sigmoid_label = state.input[self.sigmoid_input_key].detach().cpu().numpy()
-        self.sigmoid_outputs.append(sigmoid_output)
-        self.sigmoid_labels.append(sigmoid_label)
+        culture_output = F.sigmoid(state.output[self.culture_output_key])
+        culture_output = culture_output.detach().cpu().numpy()
+        culture_label = state.input[self.culture_input_key].detach().cpu().numpy()
+        self.culture_outputs.append(culture_output)
+        self.culture_labels.append(culture_label)
 
-        softmax_output = F.softmax(state.output[self.softmax_output_key])
-        softmax_output = softmax_output.detach().cpu().numpy()
-        softmax_label = state.input[self.softmax_input_key].detach().cpu().numpy()
-        self.softmax_outputs.append(softmax_output)
-        self.softmax_labels.append(softmax_label)
+        tag_output = F.sigmoid(state.output[self.tag_output_key])
+        tag_output = tag_output.detach().cpu().numpy()
+        tag_label = state.input[self.tag_input_key].detach().cpu().numpy()
+        self.tag_outputs.append(tag_output)
+        self.tag_labels.append(tag_label)
 
     def on_loader_end(self, state):
         import warnings
         warnings.filterwarnings("ignore")
 
-        self.sigmoid_outputs = np.concatenate(self.sigmoid_outputs, axis=0)
-        self.sigmoid_labels = np.concatenate(self.sigmoid_labels, axis=0)
+        self.culture_outputs = np.concatenate(self.culture_outputs, axis=0)
+        self.culture_labels = np.concatenate(self.culture_labels, axis=0)
 
-        sigmoid_fscore = fbeta_score(
-            y_pred=self.sigmoid_outputs > self.th,
-            y_true=self.sigmoid_labels,
+        culture_score = fbeta_score(
+            y_pred=self.culture_outputs > self.th,
+            y_true=self.culture_labels,
             beta=self.beta,
             average="samples"
         )
-        state.metrics.epoch_values[state.loader_name]['sigmoid_fbeta'] = sigmoid_fscore
+        state.metrics.epoch_values[state.loader_name]['culture_score'] = culture_score
 
-        self.softmax_outputs = np.concatenate(self.softmax_outputs, axis=0)
-        self.softmax_labels = np.concatenate(self.softmax_labels, axis=0)
+        self.tag_outputs = np.concatenate(self.tag_outputs, axis=0)
+        self.tag_labels = np.concatenate(self.tag_labels, axis=0)
 
-        softmax_fscore = fbeta_score(
-            y_pred=self.softmax_outputs > self.th,
-            y_true=self.softmax_labels,
+        tag_fscore = fbeta_score(
+            y_pred=self.tag_outputs > self.th,
+            y_true=self.tag_labels,
             beta=self.beta,
             average="samples"
         )
-        state.metrics.epoch_values[state.loader_name]['softmax_fbeta'] = softmax_fscore
+        state.metrics.epoch_values[state.loader_name]['tag_score'] = tag_fscore
 
-        state.metrics.epoch_values[state.loader_name]['avg_fbeta'] = (softmax_fscore + sigmoid_fscore) / 2
+        merge_predict = self.merge_culture_tag(self.culture_outputs > self.th, self.tag_outputs > self.th)
+        merge_gt = self.merge_culture_tag(self.culture_labels, self.tag_labels)
+
+        merge_score = fbeta_score(
+            y_pred=merge_predict,
+            y_true=merge_gt,
+            beta=self.beta,
+            average="samples"
+        )
+        state.metrics.epoch_values[state.loader_name]['merge_score'] = merge_score

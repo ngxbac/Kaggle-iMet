@@ -1,0 +1,133 @@
+model_params:
+  model: inception_v3_deepsupervision
+  params:
+    arch: resnet34
+    n_class: 1103
+    image_size: &image_size 299
+    pretrained: True
+
+
+args:
+  expdir: ""
+  logdir: "./logs/imet/"
+
+
+stages:
+
+  state_params:
+    main_metric: &reduce_metric fbeta
+    minimize_metric: False
+
+  criterion_params:
+    criterion: BCEFbetaFocalLoss
+#    gamma: 2
+
+  scheduler_params:
+    scheduler: ReduceLROnPlateau
+    patience: 5
+    factor: 0.1
+    mode: max
+    verbose: True
+
+#   stage1:
+
+#     data_params:
+#       batch_size: 32
+#       n_workers: 4
+# #       drop_last: False
+
+#       train_csv: "./imet/csv/kfold6/train_0.csv.gz"
+#       valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
+#       root: "/home/ubuntu2/ngxbac/imet/train/"
+#       image_size: *image_size
+
+#       # CsvDataset settings
+#       image_key: 'id'
+#       label_key: 'attribute_ids'
+
+#     state_params:
+#       n_epochs: 1
+
+#     optimizer_params:
+#       optimizer: Adam
+#       lr: 0.0001
+#       weight_decay: 0.0001
+
+#     callbacks_params:
+#       loss:
+#         callback: LossDeepSupervisionCallback
+#       optimizer:
+#         callback: OptimizerCallback
+#       f1:
+#         callback: FbetaDeepSupervisionCallback
+#       scheduler:
+#         callback: SchedulerCallback
+#         reduce_metric: *reduce_metric
+#       saver:
+#         callback: CheckpointCallback
+#         save_n_best: 5
+
+#   stage2:
+
+#     data_params:
+#       batch_size: 32
+#       n_workers: 4
+# #       drop_last: False
+
+#       train_csv: "./imet/csv/kfold6/train_0.csv.gz"
+#       valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
+#       root: "/home/ubuntu2/ngxbac/imet/train/"
+      
+#       image_size: *image_size
+
+#       # CsvDataset settings
+#       image_key: 'id'
+#       label_key: 'attribute_ids'
+
+#     state_params:
+#       n_epochs: 10
+
+#     optimizer_params:
+#       optimizer: Adam
+#       lr: 0.00001
+#       weight_decay: 0.0001
+
+#     callbacks_params:
+#       loss:
+#         callback: LossDeepSupervisionCallback
+#       optimizer:
+#         callback: OptimizerCallback
+#       f1:
+#         callback: FbetaDeepSupervisionCallback
+#       scheduler:
+#         callback: SchedulerCallback
+#         reduce_metric: *reduce_metric
+#       saver:
+#         callback: CheckpointCallback
+#         save_n_best: 5
+
+
+  infer:
+    data_params:
+      n_workers: 4
+      batch_size: 16
+      drop_last: False
+
+      infer_csv: "./data/sample_submission.csv"
+      root: "/home/ubuntu2/ngxbac/imet/test/"
+
+      image_size: *image_size
+
+      # CsvDataset settings
+      image_key: 'id'
+      label_key: 'attribute_ids'
+
+      use_tta: False
+
+    callbacks_params:
+      loader:
+        callback: CheckpointCallback
+      infer:
+        callback: InferCallback
+        out_dir: ""
+        out_prefix: "/predicts/{suffix}.npy"

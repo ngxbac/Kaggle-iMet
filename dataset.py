@@ -84,6 +84,7 @@ class TwoHeadDataset(Dataset):
 
     def __init__(self,
                  csv_file,
+                 label_file,
                  root,
                  transform,
                  mode='train',
@@ -91,17 +92,46 @@ class TwoHeadDataset(Dataset):
                  label_key='category_id',
                  ):
         df = pd.read_csv(csv_file, nrows=None)
+        label_df = pd.read_csv(label_file)
+
+        label_df['att'] = label_df['attribute_name'].apply(lambda x: 'culture' if 'culture' in x else 'tag')
+        attribute_names = label_df['attribute_name'].values
+
+        self.unique_cultures = label_df[label_df['att'] == 'culture']['attribute_name'].unique()
+        self.unique_tag = label_df[label_df['att'] == 'tag']['attribute_name'].unique()
+
+        self.le_culture = LabelEncoder()
+        self.le_culture.fit(self.unique_cultures)
+        np.save("./data/culture_class.npy", self.le_culture.classes_)
+        self.n_culture_cls = len(self.le_culture.classes_)
+
+        self.le_tag = LabelEncoder()
+        self.le_tag.fit(self.unique_tag)
+        np.save("./data/tag_class.npy", self.le_tag.classes_)
+        self.n_tag_cls = len(self.le_tag.classes_)
 
         self.mode = mode
         if mode == 'train':
             self.labels = df[label_key].values
 
-            # Softmax label
-            cls = np.load("./data/class.npy")
-            le = LabelEncoder()
-            le.classes_ = cls
-            self.labels_softmax = le.transform(self.labels)
-            np.save("softmax_label.npy", le.classes_)
+            self.culture_labels = []
+            self.tag_labels = []
+            for label in self.labels:
+                label = [int(l) for l in label.split(' ')]
+                culture_label = []
+                tag_label = []
+
+                for l in label:
+                    attribute_name = attribute_names[l]
+                    if 'culture' in attribute_name:
+                        culture_label.append(attribute_name)
+                    elif 'tag' in attribute_name:
+                        tag_label.append(attribute_name)
+                    else:
+                        raise ValueError
+
+                self.culture_labels.append(culture_label)
+                self.tag_labels.append(tag_label)
 
         self.images = df[image_key].values
         self.transform = transform
@@ -118,16 +148,21 @@ class TwoHeadDataset(Dataset):
         image = load_image(image)
 
         if self.mode == 'train':
-            label = self.labels[idx]
-            label = [int(l) for l in label.split(' ')]
-            label_sigmoid = np.zeros(NUM_CLASSES).astype(np.float32)
-            for l in label:
-                label_sigmoid[l] = 1
+            culture_label = self.culture_labels[idx]
+            tag_label = self.tag_labels[idx]
 
-            label_softmax = self.labels_softmax[idx]
+            culture_label_sigmoid = np.zeros(self.n_culture_cls).astype(np.float32)
+            for label in culture_label:
+                label = self.le_culture.transform([label])[0]
+                culture_label_sigmoid[label] = 1
+
+            tag_label_sigmoid = np.zeros(self.n_tag_cls).astype(np.float32)
+            for label in tag_label:
+                label = self.le_tag.transform([label])[0]
+                tag_label_sigmoid[label] = 1
         else:
-            label_sigmoid = np.zeros(NUM_CLASSES).astype(np.float32)
-            label_softmax = -1
+            culture_label_sigmoid = np.zeros(self.n_culture_cls).astype(np.float32)
+            tag_label_sigmoid = np.zeros(self.n_tag_cls).astype(np.float32)
 
         if self.transform:
             image = self.transform(image=image)['image']
@@ -135,8 +170,8 @@ class TwoHeadDataset(Dataset):
 
         return {
             "images": image,
-            "sigmoid_label": label_sigmoid,
-            "softmax_label": label_softmax
+            "culture_labels": culture_label_sigmoid,
+            "tag_labels": tag_label_sigmoid
         }
 
 

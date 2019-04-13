@@ -1,5 +1,5 @@
 model_params:
-  model: finetune
+  model: finetune_2heads
   params:
     arch: resnet34
     n_class: 1103
@@ -15,7 +15,7 @@ args:
 stages:
 
   state_params:
-    main_metric: &reduce_metric avg_fbeta
+    main_metric: &reduce_metric merge_score
     minimize_metric: False
 
   criterion_params:
@@ -23,11 +23,10 @@ stages:
 #    gamma: 2
 
   scheduler_params:
-    scheduler: ReduceLROnPlateau
-    patience: 5
-    factor: 0.1
-    mode: max
-    verbose: True
+    scheduler: StepLR
+    step_size: 5
+    gamma: 0.1
+
 
   stage1:
 
@@ -42,6 +41,7 @@ stages:
         dataset_name: TwoHeadDataset
         train:
           csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          label_file: "./data/labels.csv"
           root: "/home/ubuntu2/ngxbac/imet/train/"
           # CsvDataset settings
           image_key: 'id'
@@ -50,6 +50,7 @@ stages:
 
         valid:
           csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          label_file: "./data/labels.csv"
           root: "/home/ubuntu2/ngxbac/imet/train/"
           # CsvDataset settings
           image_key: 'id'
@@ -61,7 +62,7 @@ stages:
 
     optimizer_params:
       optimizer: Adam
-      lr: 0.0001
+      lr: 0.001
       weight_decay: 0.0001
 
     callbacks_params:
@@ -91,6 +92,7 @@ stages:
         dataset_name: TwoHeadDataset
         train:
           csv_file: "./imet/csv/kfold6/train_0.csv.gz"
+          label_file: "./data/labels.csv"
           root: "/home/ubuntu2/ngxbac/imet/train/"
           # CsvDataset settings
           image_key: 'id'
@@ -99,6 +101,7 @@ stages:
 
         valid:
           csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
+          label_file: "./data/labels.csv"
           root: "/home/ubuntu2/ngxbac/imet/train/"
           # CsvDataset settings
           image_key: 'id'
@@ -110,7 +113,7 @@ stages:
 
     optimizer_params:
       optimizer: Adam
-      lr: 0.00001
+      lr: 0.0001
       weight_decay: 0.0001
 
     callbacks_params:

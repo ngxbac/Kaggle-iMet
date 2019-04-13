@@ -78,12 +78,13 @@ class TwoHeadsLoss(nn.Module):
     """
     def __init__(self):
         super(TwoHeadsLoss, self).__init__()
-        self.sigmoid_loss = BCEFbetaFocalLoss()
-        self.softmax_loss = nn.CrossEntropyLoss()
+        self.culture_loss = BCEFbetaFocalLoss()
+        self.tag_loss = BCEFbetaFocalLoss()
 
-    def forward(self, logit_sigmoid, logit_softmax, target_sigmoid, target_softmax):
-        sigmoid_loss = self.sigmoid_loss(logit_sigmoid, target_sigmoid)
-        softmax_loss = self.softmax_loss(logit_softmax, target_softmax)
+    def forward(self, culture_logits, tag_logits, culture_labels, tag_labels):
 
-        return 0.5 * sigmoid_loss + 0.5 * softmax_loss
+        culture_loss = self.culture_loss(culture_logits, culture_labels)
+        tag_loss = self.tag_loss(tag_logits, tag_labels)
+
+        return 0.5 * culture_loss + 0.5 * tag_loss
 
