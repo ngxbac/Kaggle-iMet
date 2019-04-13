@@ -264,6 +264,24 @@ class FbetaTwoHeadsCallback(Callback):
 
         return merge_arr
 
+    def search_threshold(self, preds, gts):
+        scores = []
+        thresholds = np.arange(0.1, 0.5, 0.01)
+        for threshold in thresholds:
+            score = fbeta_score(
+                y_true=gts,
+                y_pred=preds > threshold,
+                beta=self.beta,
+                average="samples"
+            )
+            scores.append(score)
+
+        scores = np.asarray(scores)
+        argmax = scores.argmax()
+        max_score = scores[argmax]
+        optimize_threshold = thresholds[argmax]
+        return max_score, optimize_threshold
+
     def on_batch_end(self, state):
         culture_output = F.sigmoid(state.output[self.culture_output_key])
         culture_output = culture_output.detach().cpu().numpy()
@@ -292,6 +310,10 @@ class FbetaTwoHeadsCallback(Callback):
         )
         state.metrics.epoch_values[state.loader_name]['culture_score'] = culture_score
 
+        # culture_score, culture_th = self.search_threshold(self.culture_outputs, self.culture_labels)
+        # state.metrics.epoch_values[state.loader_name]['culture_score'] = culture_score
+        # state.metrics.epoch_values[state.loader_name]['culture_th'] = culture_th
+
         self.tag_outputs = np.concatenate(self.tag_outputs, axis=0)
         self.tag_labels = np.concatenate(self.tag_labels, axis=0)
 
@@ -302,6 +324,10 @@ class FbetaTwoHeadsCallback(Callback):
             average="samples"
         )
         state.metrics.epoch_values[state.loader_name]['tag_score'] = tag_fscore
+
+        # tag_score, tag_th = self.search_threshold(self.tag_outputs, self.tag_labels)
+        # state.metrics.epoch_values[state.loader_name]['tag_score'] = tag_score
+        # state.metrics.epoch_values[state.loader_name]['tag_th'] = tag_th
 
         merge_predict = self.merge_culture_tag(self.culture_outputs > self.th, self.tag_outputs > self.th)
         merge_gt = self.merge_culture_tag(self.culture_labels, self.tag_labels)

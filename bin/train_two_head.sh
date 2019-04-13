@@ -11,7 +11,7 @@ export CUDA_VISIBLE_DEVICES=1,2,3
 
 for model in resnet34; do
     for fold in 0; do
-        LOGDIR=./logs_imet/twoheads/$model/fold_${fold}/
+        LOGDIR=./logs_imet/twoheads_th_search/$model/fold_${fold}/
         catalyst-dl run --config=./imet/configs/config_two_head.yml \
                         --logdir=$LOGDIR \
                         --model_params/params/arch=$model:str \

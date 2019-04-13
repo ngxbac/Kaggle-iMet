@@ -86,5 +86,5 @@ class TwoHeadsLoss(nn.Module):
         culture_loss = self.culture_loss(culture_logits, culture_labels)
         tag_loss = self.tag_loss(tag_logits, tag_labels)
 
-        return 0.5 * culture_loss + 0.5 * tag_loss
+        return 1/3 * culture_loss + 2/3 * tag_loss
 
