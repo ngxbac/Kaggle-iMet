@@ -79,12 +79,12 @@ class TwoHeadsLoss(nn.Module):
     def __init__(self):
         super(TwoHeadsLoss, self).__init__()
         self.culture_loss = BCEFbetaFocalLoss()
-        self.tag_loss = BCEFbetaFocalLoss()
+        self.tag_loss = BCEAndFbeta()
 
     def forward(self, culture_logits, tag_logits, culture_labels, tag_labels):
 
         culture_loss = self.culture_loss(culture_logits, culture_labels)
         tag_loss = self.tag_loss(tag_logits, tag_labels)
 
-        return 1/3 * culture_loss + 2/3 * tag_loss
+        return 0.5 * culture_loss + 0.5 * tag_loss
 
