@@ -1,16 +1,16 @@
 model_params:
+  model: finetune
 #  model: finetune
-##  model: finetune
-#  params:
-#    arch: resnet34
-#    n_class: 1103
-#    image_size: &image_size 224
-#    pretrained: True
-  model: &model_name finetune_dla
   params:
-    arch: dla34
+    arch: resnet34
     n_class: 1103
-    pretrained: "imagenet"
+    image_size: &image_size 224
+    pretrained: True
+#  model: &model_name finetune_dla
+#  params:
+#    arch: dla34
+#    n_class: 1103
+#    pretrained: "imagenet"
 
 
 args:
@@ -29,11 +29,9 @@ stages:
 #    gamma: 2
 
   scheduler_params:
-    scheduler: ReduceLROnPlateau
-    patience: 5
-    factor: 0.1
-    mode: max
-    verbose: True
+    scheduler: StepLR
+    step_size: 5
+    gamma: 0.1
 
   stage1:
 
@@ -42,7 +40,7 @@ stages:
       n_workers: 4
       drop_last: False
 
-      image_size: &image_size 224
+      image_size: 224
 
       dataset:
         dataset_name: CsvDataset
@@ -67,7 +65,7 @@ stages:
 
     optimizer_params:
       optimizer: Adam
-      lr: 0.0001
+      lr: 0.001
       weight_decay: 0.0001
 
     callbacks_params:
@@ -116,7 +114,7 @@ stages:
 
     optimizer_params:
       optimizer: Adam
-      lr: 0.00001
+      lr: 0.0001
       weight_decay: 0.0001
 
     callbacks_params:
@@ -143,7 +141,7 @@ stages:
       image_size: *image_size
 
       dataset:
-        dataset_name: TwoHeadDataset
+        dataset_name: CsvDataset
         infer:
           csv_file: "./data/sample_submission.csv"
           root: "/home/ubuntu2/ngxbac/imet/test/"

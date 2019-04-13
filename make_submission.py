@@ -15,7 +15,7 @@ if __name__ == '__main__':
     for model_name in ["resnet34"]:
         for fold in [0]:
             # for checkpoint in range(5):
-            pred = np.load(f"./logs_imet/{model_name}_bcef2focal/fold_{fold}/predicts/infer.logits.npy")
+            pred = np.load(f"./logs_imet/{model_name}_warm/fold_{fold}/predicts/infer.logits.npy")
             pred = sigmoid(pred)
             preds.append(pred)
 
@@ -33,5 +33,5 @@ if __name__ == '__main__':
 
     test_df = pd.read_csv("./data/sample_submission.csv")
     test_df.attribute_ids = prediction
-    test_df.to_csv(f"./submission/resnet34.csv", index=False)
+    test_df.to_csv(f"./submission/resnet34_warn.csv", index=False)
     print(test_df.head())

@@ -14,13 +14,13 @@ import glob
 
 
 if __name__ == "__main__":
-    for model_name in ["se_resnext50_32x4d"]:
-        for fold in [1, 2, 3, 4]: #[0, 1, 2, 3, 4]
-            log_dir = f"/media/ngxbac/DATA/logs_iwildcam/{model_name}_all_clean_2epoch/fold_{fold}/"
+    for model_name in ["resnet34"]:
+        for fold in [0]: #[0, 1, 2, 3, 4]
+            log_dir = f"./logs_imet/{model_name}_warm/fold_{fold}/"
             with open(f"{log_dir}/config.json") as f:
                 config = json.load(f)
 
-            with open("./configs/inference.yml") as f:
+            with open("./imet/configs/inference.yml") as f:
                 infer_config = yaml.load(f)
 
             model_function = getattr(models, config['model_params']['model'])
@@ -28,7 +28,6 @@ if __name__ == "__main__":
 
             infer_csv = infer_config['stages']['infer']['data_params']['infer_csv']
             root = infer_config['stages']['infer']['data_params']['root']
-            root_external = infer_config['stages']['infer']['data_params']['root_external']
             image_size = infer_config['stages']['infer']['data_params']['image_size']
             image_key = infer_config['stages']['infer']['data_params']['image_key']
             label_key = infer_config['stages']['infer']['data_params']['label_key']
@@ -43,7 +42,6 @@ if __name__ == "__main__":
                         inferset = CsvDataset(
                             csv_file=infer_csv,
                             root=root,
-                            root_external=root_external,
                             image_key=image_key,
                             label_key=label_key,
                             transform=transform,
@@ -63,7 +61,6 @@ if __name__ == "__main__":
                     inferset = CsvDataset(
                         csv_file=infer_csv,
                         root=root,
-                        root_external=root_external,
                         image_key=image_key,
                         label_key=label_key,
                         transform=transforms[0],
@@ -79,12 +76,12 @@ if __name__ == "__main__":
 
                     loaders[f'infer'] = infer_loader
 
-            all_checkpoints = glob.glob(f"{log_dir}/checkpoints/stage1.0.pth")
+            all_checkpoints = glob.glob(f"{log_dir}/checkpoints/best.pth")
 
             for i, checkpoint in enumerate(all_checkpoints):
                 callbacks = [
                     CheckpointCallback(resume=checkpoint),
-                    InferCallback(out_dir=log_dir, out_prefix="/predicts_0/predictions." + "{suffix}" + f".{i}.npy")
+                    InferCallback(out_dir=log_dir, out_prefix="/predicts/predictions." + "{suffix}" + f".{i}.npy")
                 ]
 
                 runner = ModelRunner()

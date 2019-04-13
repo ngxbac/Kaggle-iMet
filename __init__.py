@@ -27,3 +27,4 @@ Registry.criterion(FbetaLoss)
 Registry.criterion(BCEAndFbeta)
 Registry.criterion(BCEFbetaFocalLoss)
 Registry.criterion(TwoHeadsLoss)
+

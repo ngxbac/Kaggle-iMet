@@ -17,17 +17,18 @@ stages:
     data_params:
       n_workers: 4
       batch_size: 64
-      infer_csv: "/media/ngxbac/Bac2/fgvc6/data/test.csv"
-      root: "/media/ngxbac/Bac2/fgvc6/data/test_224/"
-      root_external: "/media/ngxbac/Bac2/fgvc6/data/iWildCam_2019_iNat_Idaho/"
+      infer_csv: "./data/sample_submission.csv"
+
+      csv_file: "./data/sample_submission.csv"
+      root: "/home/ubuntu2/ngxbac/imet/test/"
 
       image_size: *image_size
 
       # CsvDataset settings
-      image_key: 'file_name'
-      label_key: 'category_id'
+      image_key: 'id'
+      label_key: 'attribute_ids'
 
-      use_tta: True
+      use_tta: False
 
     callbacks_params:
       loader:

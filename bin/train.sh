@@ -9,7 +9,7 @@ echo "Training..."
 
 export CUDA_VISIBLE_DEVICES=2,3
 
-for model in dla34; do
+for model in resnet34; do
     for fold in 0; do
         LOGDIR=./logs_imet/${model}_warm/fold_${fold}/
         catalyst-dl run --config=./imet/configs/config.yml \
