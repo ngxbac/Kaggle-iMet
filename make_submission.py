@@ -12,10 +12,10 @@ if __name__ == '__main__':
     os.makedirs("submission", exist_ok=True)
     threshold = 0.3
     preds = []
-    for model_name in ["resnet34"]:
+    for model_name in ["se_resnext50_32x4d"]:
         for fold in [0]:
             # for checkpoint in range(5):
-            pred = np.load(f"./logs_imet/{model_name}_warm/fold_{fold}/predicts/infer.logits.npy")
+            pred = np.load(f"./logs_imet/finetune/{model_name}_512/fold_{fold}/predicts/infer.logits.npy")
             pred = sigmoid(pred)
             preds.append(pred)
 
@@ -33,5 +33,5 @@ if __name__ == '__main__':
 
     test_df = pd.read_csv("./data/sample_submission.csv")
     test_df.attribute_ids = prediction
-    test_df.to_csv(f"./submission/resnet34_warn.csv", index=False)
+    test_df.to_csv(f"./submission/se_resnext50_32x4d.csv", index=False)
     print(test_df.head())

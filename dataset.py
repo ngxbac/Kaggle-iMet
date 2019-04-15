@@ -41,7 +41,7 @@ class CsvDataset(Dataset):
                  image_key='file_name',
                  label_key='category_id',
                  ):
-        df = pd.read_csv(csv_file, nrows=None)
+        df = pd.read_csv(csv_file, nrows=1000)
         
         self.mode = mode
         if mode == 'train':

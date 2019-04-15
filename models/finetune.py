@@ -42,7 +42,7 @@ class FinetuneCBAM(nn.Module):
         arch="se_resnet50",
         n_class=6,
         pretrained=True,
-        image_size=256,
+        image_size=512,
         **kwargs
     ):
         super(FinetuneCBAM, self).__init__()
@@ -54,8 +54,13 @@ class FinetuneCBAM(nn.Module):
             att_type='CBAM'
         )
 
+        if image_size == 512:
+            in_features = 8192
+        elif image_size == 224:
+            in_features = 2048
+
         self.fc = nn.Linear(
-            self.model.fc.in_features,
+            in_features,
             n_class
         )
 
