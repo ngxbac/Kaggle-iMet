@@ -21,7 +21,6 @@ registry.Callback(LossDeepSupervisionCallback)
 registry.Callback(FbetaDeepSupervisionCallback)
 registry.Callback(FbetaTwoHeadsCallback)
 registry.Callback(LossTwoHeadCallback)
-registry.Callback(FreeGPU)
 
 # Register loss
 registry.Criterion(FocalLoss)
