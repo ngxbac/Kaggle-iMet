@@ -12,7 +12,6 @@ registry.Model(finetune_cbam)
 registry.Model(inception_v3_deepsupervision)
 registry.Model(finetune_fishnet)
 registry.Model(finetune_dla)
-registry.Model(finetune_2heads)
 
 # Register callback
 registry.Callback(F1Callback)

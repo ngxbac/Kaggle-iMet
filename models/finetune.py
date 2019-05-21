@@ -1,10 +1,28 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from cnn_finetune import make_model
 from .cbam_cam import ResidualNet as AttentionResnet
 import models.fishnet as fishnet
 import models.dla as dla
+from models.senet import *
+from models.pnasnet import *
+
+
+def get_senet_features(original_model):
+    return nn.Sequential(
+        original_model.layer0,
+        original_model.layer1,
+        original_model.layer2,
+        original_model.layer3,
+        original_model.layer4,
+    )
+
+
+def get_nasnet5large_features(original_model):
+    features = nn.Module()
+    for name, module in list(original_model.named_children())[:-3]:
+        features.add_module(name, module)
+    return features
 
 
 class Finetune(nn.Module):
@@ -12,17 +30,28 @@ class Finetune(nn.Module):
         self,
         arch="se_resnet50",
         n_class=6,
-        pretrained=True,
-        image_size=256,
         **kwargs
     ):
         super(Finetune, self).__init__()
-        self.model = make_model(
-            model_name=arch,
-            num_classes=n_class,
-            pretrained=pretrained,
-            input_size=(image_size, image_size),
-        )
+        self.arch = arch
+        if arch == 'se_resnext50_32x4d':
+            self.model = se_resnext50_32x4d(num_classes=1000, pretrained='imagenet')
+            self.model._features = get_senet_features(self.model)
+            self.model.avg_pool = nn.AdaptiveAvgPool2d(1)
+            in_features = self.model.last_linear.in_features
+            self.model.last_linear = nn.Linear(
+                in_features=in_features, out_features=n_class
+            )
+        elif arch == 'pnasnet5large':
+            self.model = pnasnet5large(num_classes=1000, pretrained='imagenet')
+            self.model._features = get_nasnet5large_features(self.model)
+            self.model.avg_pool = nn.AdaptiveAvgPool2d(1)
+            in_features = self.model.last_linear.in_features
+            self.model.last_linear = nn.Linear(
+                in_features=in_features, out_features=n_class
+            )
+        else:
+            raise ValueError("No model founded !!!")
 
     def freeze_base(self):
         for param in self.model._features.parameters():

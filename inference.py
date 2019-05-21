@@ -12,58 +12,62 @@ from augmentation import infer_tta_aug
 from dataset import CsvDataset
 import glob
 
+import click
 
-if __name__ == "__main__":
-    for model_name in ["resnet34"]:
-        for fold in [0]: #[0, 1, 2, 3, 4]
-            log_dir = f"./logs_imet/{model_name}_warm/fold_{fold}/"
-            with open(f"{log_dir}/config.json") as f:
-                config = json.load(f)
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
-            with open("./imet/configs/inference.yml") as f:
-                infer_config = yaml.load(f)
 
-            model_function = getattr(models, config['model_params']['model'])
-            model = model_function(config['model_params']['params'])
+@click.group()
+def cli():
+    print("Inference !!!")
 
-            infer_csv = infer_config['stages']['infer']['data_params']['infer_csv']
-            root = infer_config['stages']['infer']['data_params']['root']
-            image_size = infer_config['stages']['infer']['data_params']['image_size']
-            image_key = infer_config['stages']['infer']['data_params']['image_key']
-            label_key = infer_config['stages']['infer']['data_params']['label_key']
-            # use_tta = infer_config['stages']['infer']['data_params']['use_tta']
-            use_tta = False
 
-            loaders = OrderedDict()
-            if infer_csv:
-                transforms = infer_tta_aug(image_size)
-                if use_tta:
-                    for i, transform in enumerate(transforms):
-                        inferset = CsvDataset(
-                            csv_file=infer_csv,
-                            root=root,
-                            image_key=image_key,
-                            label_key=label_key,
-                            transform=transform,
-                            mode='infer'
-                        )
+@cli.command()
+@click.option('--model_name', type=str, default='se_resnext50_32x4d')
+@click.option('--logbase_dir', type=str, default='/raid/bac/kaggle/logs/imet2019/finetune/')
+@click.option('--dataset', type=str, default='infer')
+@click.option('--infer_csv', type=str)
+@click.option('--infer_root', type=str)
+@click.option('--image_size', type=int)
+@click.option('--image_key', type=str)
+@click.option('--label_key', type=str)
+@click.option('--n_class', type=int)
+def infer_kfold(
+    model_name,
+    logbase_dir,
+    dataset,
+    infer_csv,
+    infer_root,
+    image_size,
+    image_key,
+    label_key,
+    n_class,
 
-                        infer_loader = DataLoader(
-                            dataset=inferset,
-                            num_workers=4,
-                            shuffle=False,
-                            batch_size=32
-                        )
+):
+    for fold in [0, 1, 2, 3, 4, 5]:
+        log_dir = f"{logbase_dir}/{model_name}_512/fold_{fold}/"
 
-                        loaders[f'infer_{i}'] = infer_loader
+        model_function = getattr(models, 'finetune')
+        params = {
+            'arch': model_name,
+            'n_class': n_class
+        }
+        model = model_function(params)
+        use_tta = False
 
-                else:
+        loaders = OrderedDict()
+        if infer_csv:
+            transforms = infer_tta_aug(image_size)
+            if use_tta:
+                for i, transform in enumerate(transforms):
                     inferset = CsvDataset(
                         csv_file=infer_csv,
-                        root=root,
+                        root=infer_root,
                         image_key=image_key,
                         label_key=label_key,
-                        transform=transforms[0],
+                        transform=transform,
                         mode='infer'
                     )
 
@@ -74,20 +78,133 @@ if __name__ == "__main__":
                         batch_size=32
                     )
 
-                    loaders[f'infer'] = infer_loader
+                    loaders[f'infer_{i}'] = infer_loader
 
-            all_checkpoints = glob.glob(f"{log_dir}/checkpoints/best.pth")
-
-            for i, checkpoint in enumerate(all_checkpoints):
-                callbacks = [
-                    CheckpointCallback(resume=checkpoint),
-                    InferCallback(out_dir=log_dir, out_prefix="/predicts/predictions." + "{suffix}" + f".{i}.npy")
-                ]
-
-                runner = ModelRunner()
-                runner.infer(
-                    model,
-                    loaders,
-                    callbacks,
-                    verbose=True,
+            else:
+                inferset = CsvDataset(
+                    csv_file=infer_csv,
+                    root=infer_root,
+                    image_key=image_key,
+                    label_key=label_key,
+                    transform=transforms[0],
+                    mode='infer'
                 )
+
+                infer_loader = DataLoader(
+                    dataset=inferset,
+                    num_workers=4,
+                    shuffle=False,
+                    batch_size=32
+                )
+
+                loaders[f'{dataset}'] = infer_loader
+
+        all_checkpoints = f"{log_dir}/checkpoints/best.pth"
+
+        callbacks = [
+            CheckpointCallback(resume=all_checkpoints),
+            InferCallback(out_dir=log_dir, out_prefix="/predicts/")
+        ]
+
+        runner = ModelRunner()
+        runner.infer(
+            model,
+            loaders,
+            callbacks,
+            verbose=True,
+        )
+
+
+@cli.command()
+@click.option('--model_name', type=str, default='se_resnext50_32x4d')
+@click.option('--logbase_dir', type=str, default='/raid/bac/kaggle/logs/imet2019/finetune/')
+@click.option('--dataset', type=str, default='infer')
+@click.option('--infer_csv', type=str)
+@click.option('--infer_root', type=str)
+@click.option('--image_size', type=int)
+@click.option('--image_key', type=str)
+@click.option('--label_key', type=str)
+@click.option('--n_class', type=int)
+@click.option('--fold', type=int)
+def infer_one_fold(
+    model_name,
+    logbase_dir,
+    dataset,
+    infer_csv,
+    infer_root,
+    image_size,
+    image_key,
+    label_key,
+    n_class,
+    fold,
+):
+    log_dir = f"{logbase_dir}/{model_name}_512/fold_{fold}/"
+
+    model_function = getattr(models, 'finetune')
+    params = {
+        'arch': model_name,
+        'n_class': n_class
+    }
+    model = model_function(params)
+    use_tta = False
+
+    loaders = OrderedDict()
+    if infer_csv:
+        transforms = infer_tta_aug(image_size)
+        if use_tta:
+            for i, transform in enumerate(transforms):
+                inferset = CsvDataset(
+                    csv_file=infer_csv,
+                    root=infer_root,
+                    image_key=image_key,
+                    label_key=label_key,
+                    transform=transform,
+                    mode='infer'
+                )
+
+                infer_loader = DataLoader(
+                    dataset=inferset,
+                    num_workers=4,
+                    shuffle=False,
+                    batch_size=32
+                )
+
+                loaders[f'infer_{i}'] = infer_loader
+
+        else:
+            inferset = CsvDataset(
+                csv_file=infer_csv,
+                root=infer_root,
+                image_key=image_key,
+                label_key=label_key,
+                transform=transforms[0],
+                mode='infer'
+            )
+
+            infer_loader = DataLoader(
+                dataset=inferset,
+                num_workers=4,
+                shuffle=False,
+                batch_size=32
+            )
+
+            loaders[f'{dataset}'] = infer_loader
+
+    all_checkpoints = f"{log_dir}/checkpoints/best.pth"
+
+    callbacks = [
+        CheckpointCallback(resume=all_checkpoints),
+        InferCallback(out_dir=log_dir, out_prefix="/predicts/")
+    ]
+
+    runner = ModelRunner()
+    runner.infer(
+        model,
+        loaders,
+        callbacks,
+        verbose=True,
+    )
+
+
+if __name__ == "__main__":
+    cli()

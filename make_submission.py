@@ -13,9 +13,9 @@ if __name__ == '__main__':
     threshold = 0.3
     preds = []
     for model_name in ["se_resnext50_32x4d"]:
-        for fold in [0]:
+        for fold in [0, 1, 2, 3, 4, 5]:
             # for checkpoint in range(5):
-            pred = np.load(f"./logs_imet/finetune/{model_name}_512/fold_{fold}/predicts/infer.logits.npy")
+            pred = np.load(f"/raid/bac/kaggle/logs/imet2019/finetune/{model_name}_512/fold_{fold}/predicts/infer.logits.npy")
             pred = sigmoid(pred)
             preds.append(pred)
 
@@ -31,7 +31,8 @@ if __name__ == '__main__':
         pred_str = " ".join(list(map(str, pred1)))
         prediction.append(pred_str)
 
-    test_df = pd.read_csv("./data/sample_submission.csv")
+    test_df = pd.read_csv("/raid/data/kaggle/imet2019/sample_submission.csv")
     test_df.attribute_ids = prediction
-    test_df.to_csv(f"./submission/se_resnext50_32x4d.csv", index=False)
+    os.makedirs("submission", exist_ok=True)
+    test_df.to_csv(f"./submission/{model_name}_kfold.csv", index=False)
     print(test_df.head())
