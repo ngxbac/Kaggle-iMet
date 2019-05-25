@@ -3,28 +3,6 @@ model_params:
   params:
     arch: resnet34
     n_class: 1103
-    image_size: &image_size 512
-    pretrained: True
-
-#  model: finetune_dla
-#  params:
-#    arch: dla34
-#    n_class: 1103
-#    pretrained: "imagenet"
-
-
-#  model: finetune_cbam
-#  params:
-#    arch: dla34
-#    n_class: 1103
-#    pretrained: True
-
-
-#  model: finetune_fishnet
-#  params:
-#    arch: fishnet99
-#    n_class: 1103
-#    pretrained: "./pretrained/fishnet/fishnet99_ckpt.tar"
 
 
 args:
@@ -40,27 +18,27 @@ stages:
 
   criterion_params:
     criterion: BCEFbetaFocalLoss
-#    gamma: 2
 
   scheduler_params:
     scheduler: StepLR
     step_size: 5
     gamma: 0.1
 
+  data_params:
+    batch_size: 32
+    num_workers: 4
+    drop_last: False
+
   stage1:
 
     data_params:
-      batch_size: 32
-      num_workers: 4
-      drop_last: False
-
-      image_size: 512
+      image_size: &image_size 320
 
       dataset:
         dataset_name: CsvDataset
         train:
           csv_file: "./imet/csv/kfold6/train_0.csv.gz"
-          root: "/home/ubuntu2/ngxbac/imet/train/"
+          root: "/raid/data/kaggle/imet2019/train/"
           # CsvDataset settings
           image_key: 'id'
           label_key: 'attribute_ids'
@@ -68,7 +46,7 @@ stages:
 
         valid:
           csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
-          root: "/home/ubuntu2/ngxbac/imet/train/"
+          root: "/raid/data/kaggle/imet2019/train/"
           # CsvDataset settings
           image_key: 'id'
           label_key: 'attribute_ids'
@@ -99,17 +77,13 @@ stages:
   stage2:
 
     data_params:
-      batch_size: 32
-      num_workers: 4
-      drop_last: False
-
       image_size: *image_size
 
       dataset:
         dataset_name: CsvDataset
         train:
           csv_file: "./imet/csv/kfold6/train_0.csv.gz"
-          root: "/home/ubuntu2/ngxbac/imet/train/"
+          root: "/raid/data/kaggle/imet2019/train/"
           # CsvDataset settings
           image_key: 'id'
           label_key: 'attribute_ids'
@@ -117,14 +91,14 @@ stages:
 
         valid:
           csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
-          root: "/home/ubuntu2/ngxbac/imet/train/"
+          root: "/raid/data/kaggle/imet2019/train/"
           # CsvDataset settings
           image_key: 'id'
           label_key: 'attribute_ids'
           mode: 'train'
 
     state_params:
-      num_epochs: 10
+      num_epochs: 9
 
     optimizer_params:
       optimizer: Adam
@@ -144,33 +118,3 @@ stages:
       saver:
         callback: CheckpointCallback
         save_n_best: 5
-
-
-  infer:
-    data_params:
-      num_workers: 4
-      batch_size: 16
-      drop_last: False
-
-      image_size: *image_size
-
-      dataset:
-        dataset_name: CsvDataset
-        infer:
-          csv_file: "./data/sample_submission.csv"
-          root: "/home/ubuntu2/ngxbac/imet/test/"
-
-          # CsvDataset settings
-          image_key: 'id'
-          label_key: 'attribute_ids'
-          mode: 'infer'
-
-      use_tta: False
-
-    callbacks_params:
-      loader:
-        callback: CheckpointCallback
-      infer:
-        callback: InferCallback
-        out_dir: ""
-        out_prefix: "/predicts/{suffix}.npy"

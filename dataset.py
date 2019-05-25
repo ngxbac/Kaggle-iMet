@@ -41,6 +41,7 @@ class CsvDataset(Dataset):
                  image_key='file_name',
                  label_key='category_id',
                  ):
+        print(csv_file)
         df = pd.read_csv(csv_file, nrows=None)
         
         self.mode = mode

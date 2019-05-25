@@ -43,10 +43,14 @@ class Experiment(ConfigExperiment):
         datasets = OrderedDict()
 
         dataset = kwargs.get('dataset', None)
-        assert dataset is not None
+        # assert dataset is not None
+        if dataset is None:
+            exit()
 
         dataset_name = dataset.get("dataset_name", None)
-        assert dataset_name is not None
+        if dataset_name is None:
+            exit()
+        # assert dataset_name is not None
         dataset_func = getattr(Dataset, dataset_name)
 
         image_size = kwargs.get("image_size", 224)
