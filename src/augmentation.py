@@ -5,14 +5,6 @@ def train_aug(image_size=224):
     return Compose([
         Resize(image_size, image_size),
         HorizontalFlip(),
-        # OneOf([
-        #     Rotate(10),
-        #     Rotate(15),
-        #     Rotate(20),
-        #     Rotate(30),
-        #     Rotate(300),
-        # ]),
-
         Normalize(),
     ], p=1)
 

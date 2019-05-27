@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
 
 class FocalLoss(nn.Module):
@@ -22,8 +21,8 @@ class FocalLoss(nn.Module):
         loss = (invprobs * self.gamma).exp() * loss
 
         return loss.sum(dim=1).mean()
-    
-    
+
+
 class FbetaLoss(nn.Module):
     def __init__(self, beta=2):
         super(FbetaLoss, self).__init__()
@@ -43,8 +42,8 @@ class FbetaLoss(nn.Module):
         fs = (1 + beta * beta) * precise * recall / (beta * beta * precise + recall + self.small_value)
         loss = fs.sum() / batch_size
         return 1 - loss
-    
-    
+
+
 class BCEAndFbeta(nn.Module):
     def __init__(self, bce_weight=0.5):
         super(BCEAndFbeta, self).__init__()
@@ -70,21 +69,3 @@ class BCEFbetaFocalLoss(nn.Module):
         bce = self.bce_loss(logits, labels)
         focal = self.focal_loss(logits, labels)
         return 0.45 * bce + 0.45 * f1 + 0.1 * focal
-
-
-class TwoHeadsLoss(nn.Module):
-    """
-    Loss for two heads
-    """
-    def __init__(self):
-        super(TwoHeadsLoss, self).__init__()
-        self.culture_loss = BCEFbetaFocalLoss()
-        self.tag_loss = BCEAndFbeta()
-
-    def forward(self, culture_logits, tag_logits, culture_labels, tag_labels):
-
-        culture_loss = self.culture_loss(culture_logits, culture_labels)
-        tag_loss = self.tag_loss(tag_logits, tag_labels)
-
-        return 0.5 * culture_loss + 0.5 * tag_loss
-

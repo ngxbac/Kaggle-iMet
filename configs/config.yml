@@ -1,13 +1,13 @@
 model_params:
-  model: finetune
-  params:
-    arch: resnet34
-    n_class: 1103
+  model: Finetune
+  arch: resnet34
+  n_class: 1103
 
 
 args:
-  expdir: ""
-  logdir: "./logs/imet/"
+  expdir: "src"
+  logdir: &logdir "./logs/imet"
+  baselogdir: "./logs/imet"
 
 
 stages:
@@ -29,28 +29,12 @@ stages:
     num_workers: 4
     drop_last: False
 
+    image_size: &image_size 320
+    train_csv: "./imet/csv/kfold6/train_0.csv.gz"
+    valid_csv: "./imet/csv/kfold6/valid_0.csv.gz"
+    root: "/raid/data/kaggle/imet2019/train/"
+
   stage1:
-
-    data_params:
-      image_size: &image_size 512
-
-      dataset:
-        dataset_name: CsvDataset
-        train:
-          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
-          root: "/raid/data/kaggle/imet2019/train/"
-          # CsvDataset settings
-          image_key: 'id'
-          label_key: 'attribute_ids'
-          mode: 'train'
-
-        valid:
-          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
-          root: "/raid/data/kaggle/imet2019/train/"
-          # CsvDataset settings
-          image_key: 'id'
-          label_key: 'attribute_ids'
-          mode: 'train'
 
     state_params:
       num_epochs: 1
@@ -60,7 +44,7 @@ stages:
       lr: 0.001
       weight_decay: 0.0001
 
-    callbacks_params:
+    callbacks_params: &callback_params
       loss:
         callback: LossCallback
       optimizer:
@@ -76,45 +60,12 @@ stages:
 
   stage2:
 
-    data_params:
-      image_size: *image_size
-
-      dataset:
-        dataset_name: CsvDataset
-        train:
-          csv_file: "./imet/csv/kfold6/train_0.csv.gz"
-          root: "/raid/data/kaggle/imet2019/train/"
-          # CsvDataset settings
-          image_key: 'id'
-          label_key: 'attribute_ids'
-          mode: 'train'
-
-        valid:
-          csv_file: "./imet/csv/kfold6/valid_0.csv.gz"
-          root: "/raid/data/kaggle/imet2019/train/"
-          # CsvDataset settings
-          image_key: 'id'
-          label_key: 'attribute_ids'
-          mode: 'train'
-
     state_params:
-      num_epochs: 6
+      num_epochs: 9
 
     optimizer_params:
       optimizer: Adam
       lr: 0.0001
       weight_decay: 0.0001
 
-    callbacks_params:
-      loss:
-        callback: LossCallback
-      optimizer:
-        callback: OptimizerCallback
-      f1:
-        callback: FbetaCallback
-      scheduler:
-        callback: SchedulerCallback
-        reduce_metric: *reduce_metric
-      saver:
-        callback: CheckpointCallback
-        save_n_best: 5
+    callbacks_params: *callback_params

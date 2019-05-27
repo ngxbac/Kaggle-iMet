@@ -1,9 +1,10 @@
 from collections import OrderedDict
 import torch
 import torch.nn as nn
+import random
 from torch.utils.data import DataLoader
 from catalyst.dl.experiments import ConfigExperiment
-import dataset as Dataset
+from dataset import *
 from augmentation import train_aug, valid_aug, infer_tta_aug
 
 
@@ -12,6 +13,10 @@ class Experiment(ConfigExperiment):
 
         import warnings
         warnings.filterwarnings("ignore")
+
+        random.seed(2411)
+        np.random.seed(2411)
+        torch.manual_seed(2411)
 
         model_ = model
         if isinstance(model, torch.nn.DataParallel):
@@ -42,41 +47,38 @@ class Experiment(ConfigExperiment):
     def get_datasets(self, stage: str, **kwargs):
         datasets = OrderedDict()
 
-        dataset = kwargs.get('dataset', None)
-        assert dataset is not None
+        """
+        image_key: 'id'
+        label_key: 'attribute_ids'
+        """
 
-        dataset_name = dataset.get("dataset_name", None)
-        assert dataset_name is not None
-        dataset_func = getattr(Dataset, dataset_name)
+        image_size = kwargs.get("image_size", 320)
+        train_csv = kwargs.get('train_csv', None)
+        valid_csv = kwargs.get('valid_csv', None)
+        root = kwargs.get('root', None)
 
-        image_size = kwargs.get("image_size", 224)
-
-        train = dataset.get('train', None)
-        valid = dataset.get('valid', None)
-        infer = dataset.get('infer', None)
-
-        if train:
+        if train_csv:
             transform = train_aug(image_size)
-            train.update({
-                "transform": transform
-            })
-            train_set = dataset_func(**train)
+            train_set = CsvDataset(
+                csv_file=train_csv,
+                root=root,
+                transform=transform,
+                mode='train',
+                image_key='id',
+                label_key='attribute_ids',
+            )
             datasets["train"] = train_set
 
-        if valid:
+        if valid_csv:
             transform = valid_aug(image_size)
-            valid.update({
-                "transform": transform
-            })
-            valid_set = dataset_func(**valid)
+            valid_set = CsvDataset(
+                csv_file=valid_csv,
+                root=root,
+                transform=transform,
+                mode='train',
+                image_key='id',
+                label_key='attribute_ids',
+            )
             datasets["valid"] = valid_set
-
-        if infer:
-            transform = valid_aug(image_size)
-            infer.update({
-                "transform": transform
-            })
-            infer_set = dataset_func(**infer)
-            datasets["infer"] = infer_set
 
         return datasets
