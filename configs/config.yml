@@ -3,7 +3,6 @@ model_params:
   arch: resnet34
   n_class: 1103
 
-
 args:
   expdir: "src"
   logdir: &logdir "./logs/imet"

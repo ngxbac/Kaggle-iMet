@@ -1,0 +1,39 @@
+model_params:
+  model: finetune
+  params:
+    arch: resnet34
+    n_class: 6
+    image_size: &image_size 512
+    pretrained: True
+
+
+args:
+  expdir: ""
+  logdir: &logdir "./logs/intel_scene"
+  batch_size: 32
+
+stages:
+  infer:
+    data_params:
+      n_workers: 4
+      batch_size: 64
+      infer_csv: "/raid/data/kaggle/imet2019/sample_submission.csv"
+
+      csv_file: "/raid/data/kaggle/imet2019/sample_submission.csv"
+      root: "/raid/data/kaggle/imet2019/test/"
+
+      image_size: *image_size
+
+      # CsvDataset settings
+      image_key: 'id'
+      label_key: 'attribute_ids'
+
+      use_tta: False
+
+    callbacks_params:
+      loader:
+        callback: CheckpointCallback
+      infer:
+        callback: InferCallback
+        out_dir: *logdir
+        out_prefix: "/predictions/{suffix}.npy"
